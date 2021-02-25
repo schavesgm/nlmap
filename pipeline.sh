@@ -14,7 +14,7 @@ assert_dir_exists "data"
 assert_dir_exists "${PROT_PATH}"
 
 # -- Create some directories if not present
-mkdir -p out/refmtz
+mkdir -p out/${PROTEIN}/refmtz
 
 # -- Create a file from the .mtz file
 echo " ** [Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)]"
@@ -22,4 +22,4 @@ echo " ** [Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)]"
 
 # -- Build the reference model from the .mtz file
 echo " ** [Building reference model from reference refmac.mtz]"
-./scripts/shell/build_from_mtz.sh ${PROT_PATH} out/refmtz
+./scripts/shell/build_from_mtz.sh ${PROT_PATH} out/${PROTEIN}/refmtz
