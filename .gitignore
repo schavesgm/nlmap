@@ -1,2 +1,5 @@
 # Ignore folder containing the data
 data
+
+# Ignore folder containing the output
+out
