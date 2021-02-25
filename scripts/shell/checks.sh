@@ -35,7 +35,6 @@ function assert_file_extension()
 function assert_location()
 {
     if [ "${1}/${2}" != "${3}" ]; then
-        echo $(pwd)
         error_message "Not inside ${1}/${2}. Cowardly refusing to delete things"
         exit 1
     fi
