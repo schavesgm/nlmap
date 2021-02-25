@@ -14,6 +14,14 @@ function assert_dir_exists()
     fi
 }
 
+# -- Assert a file exists in a given directory
+function assert_file_exists()
+{
+    if [ ! -f ${1} ]; then
+        error_message "File ${1} does not exist"
+    fi
+}
+
 # -- Assert extension of a file
 function assert_file_extension()
 {
@@ -21,4 +29,14 @@ function assert_file_extension()
         *.${2}) ;;
         *) error_message "${1} is not an .${2} file" ;;
     esac
+}
+
+# -- Check we are in the wanted directory
+function assert_location()
+{
+    if [ "${1}/${2}" != "${3}" ]; then
+        echo $(pwd)
+        error_message "Not inside ${1}/${2}. Cowardly refusing to delete things"
+        exit 1
+    fi
 }

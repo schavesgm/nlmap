@@ -7,11 +7,14 @@ source ${CCP4PATH}/bin/ccp4.setup-sh
 # -- Source some checks functions
 source ./scripts/shell/checks.sh
 
-# -- Assert the file extension is correct
-assert_file_extension ${1} "mtz"
+# -- Retrieve some command line information
+PROT_PATH=${1}
 
-# -- Important variables needed
-MTZ_FILE=${1}; MAP_FILE=${1/.mtz/.map}; PROT_PATH=${2} 
+# -- Assert the file extension is correct
+assert_dir_exists ${PROT_PATH}
+
+# -- Name of the mtz file and corresponding map file
+MTZ_FILE="refmac.mtz"; MAP_FILE="refmac.map"
 
 # -- Fourier transform .mtz to obtain the .map file
 if [ -z "${3}" ]; then
