@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# ** Usage of each script
+# -- make_map.sh path_to_protein_data
+# -- build_from_mtz.sh path_to_protein_data
+# -- build_from_map.sh map_file path_to_protein_data out_name
+
 # -- Export the location of the CCP4 software
 export CCP4PATH=~/PlacementSTFC/software/ccp4-7.1
 
@@ -14,7 +19,7 @@ assert_dir_exists "data"
 assert_dir_exists "${PROT_PATH}"
 
 # -- Create some directories if not present
-mkdir -p out/${PROTEIN}/refmtz
+mkdir -p data/${PROTEIN}/maps
 
 # -- Create a file from the .mtz file
 echo " ** [Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)]"
@@ -22,4 +27,8 @@ echo " ** [Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)]"
 
 # -- Build the reference model from the .mtz file
 echo " ** [Building reference model from reference refmac.mtz]"
-./scripts/shell/build_from_mtz.sh ${PROT_PATH} out/${PROTEIN}/refmtz
+./scripts/shell/build_from_mtz.sh ${PROT_PATH}
+
+# -- Build the reference model from the .map file
+echo " ** [Building reference model from reference refmac.map]"
+./scripts/shell/build_from_map.sh refmac.map ${PROT_PATH} refmap
