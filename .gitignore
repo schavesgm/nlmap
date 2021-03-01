@@ -1,8 +1,7 @@
-# Ignore folder containing the data
+# Ignore some folders containing data, output and logs
 data
-
-# Ignore folder containing the output
 out
+log
 
 # Ignore pycache files
 __pycache__
