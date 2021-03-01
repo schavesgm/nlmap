@@ -25,7 +25,7 @@ assert_file_exists ${PROT_PATH}/dataset.mtz
 assert_file_exists ${PROT_PATH}/refmac.mtz
 
 # -- Names of the files used to output the data
-PRP_LOG=${OUT_PATH}/log/prepare_input.log
+CAD_LOG=${OUT_PATH}/log/cad_input.log
 BUC_LOG=${OUT_PATH}/log/buccaneer.log
 
 # -- Move to directory and save new directory
@@ -41,7 +41,7 @@ rm -r ./*
 mkdir -p ${OUT_PATH}/log
 
 # -- Generate the output for buccaneer
-cad HKLIN1 ${PROT_PATH}/dataset.mtz HKLIN2 ${PROT_PATH}/refmac.mtz HKLOUT buccaneer-input.mtz > ${PRP_LOG} <<eof
+cad HKLIN1 ${PROT_PATH}/dataset.mtz HKLIN2 ${PROT_PATH}/refmac.mtz HKLOUT buccaneer-input.mtz > ${CAD_LOG} <<eof
 LABIN  FILE 1 E1=F E2=SIGF E3=FreeR_flag
 LABIN  FILE 2 E1=PHIC_ALL_LS E2=FOM
 eof

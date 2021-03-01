@@ -24,7 +24,7 @@ assert_dir_exists ${OUT_PATH}
 
 # -- Log of the cinvfft files
 INV_LOG=${OUT_PATH}/log/invfft_${OUT_FOLDER}.log
-PRP_LOG=${OUT_PATH}/log/prepare_input.log
+SIG_LOG=${OUT_PATH}/log/sigma.log
 BUC_LOG=${OUT_PATH}/log/buccaneer.log
 
 # -- Move to directory and save new directory
@@ -43,7 +43,7 @@ mkdir -p ${OUT_PATH}/log
 cinvfft -mapin ${PROT_PATH}/${MAP_FILE} -mtzin ${PROT_PATH}/dataset.mtz -mtzout __sf.mtz -colout "[FC,PHIC]" > ${INV_LOG}
 
 # -- Prepare input .mtz file for bucaneer
-sigmaa HKLIN __sf.mtz HKLOUT buccaneer-input.mtz  >> ${PRP_LOG} <<eof
+sigmaa HKLIN __sf.mtz HKLOUT buccaneer-input.mtz  >> ${SIG_LOG} <<eof
 PARTIAL
 LABIN FP=F SIGFP=SIGF FC=FC PHIC=PHIC
 END
