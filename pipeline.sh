@@ -32,3 +32,7 @@ echo " ** [Building reference model from reference refmac.mtz]"
 # -- Build the reference model from the .map file
 echo " ** [Building reference model from reference refmac.map]"
 ./scripts/shell/build_from_map.sh refmac.map ${PROT_PATH} refmap
+
+# -- Obtain a log file from the protein data
+echo " ** [Creating a log file from the pipeline processing]"
+./scripts/python/json_log/json_log.py ./out/${PROTEIN} 

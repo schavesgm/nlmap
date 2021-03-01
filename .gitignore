@@ -3,3 +3,6 @@ data
 
 # Ignore folder containing the output
 out
+
+# Ignore pycache files
+__pycache__
