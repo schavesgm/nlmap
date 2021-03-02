@@ -29,6 +29,13 @@ class CustomEncoder(json.JSONEncoder):
 # }}}
 
 # Dump the reference mtz and the map files content {{{
+def key_to_string(key):
+    ''' Transform a given key to a string for readability. '''
+    if key == 's':
+        return 'noise_std'
+    elif key == 'v':
+        return 'small_vol_extent'
+
 def dump_refmtz(refmtz_content):
     ''' Dump the contents of the reftmtz build. '''
     return {
@@ -36,13 +43,42 @@ def dump_refmtz(refmtz_content):
         'residues' : dump_residues(refmtz_content['resids'])
     }
 
-def dump_map(map_content):
+def dump_map(map_content, matches = None):
     ''' Dump the contents of a map build. '''
-    return {
-        'params'   : dump_params(map_content['params']),
-        'residues' : dump_residues(map_content['resids']),
-        'sigma'    : dump_sigma(map_content['sigma']),
-    }
+
+    # Dictionary containing the results
+    results = {}
+
+    # Counter for number of matches
+    m = 1
+
+    if matches is not None:
+        while True:
+
+            # Retrieve the next match
+            try:
+                match = matches.group(m)
+            except IndexError:
+                break
+
+            # Obtain the key and the value of match
+            key_val = regex.match('(\w)(.*)', match)
+
+            # Append the correct key and value to dictionary
+            key = key_to_string(key_val.group(1))
+
+            # Append the value to the dictionary
+            results[key] = float(key_val.group(2))
+
+            # Move to next match
+            m += 1
+
+    # Append the rest of the content to the dictionary
+    results['params']   = dump_params(map_content['params']),
+    results['residues'] = dump_residues(map_content['resids']),
+    results['sigma']    = dump_sigma(map_content['sigma']),
+
+    return results
 # }}}
 
 # Functions to convert the content dictionaries to good format {{{
@@ -96,7 +132,7 @@ def dump_sigma(sigma_array):
         results[key] = InlineDict({
             'SIGMAA'    : row[2],
             'SHIFT'     : row[3],
-            'NEW_SIGMAA': row[4],
+            'NEW_SIGMA' : row[4],
             'MEAN_W'    : row[5],
         })
 
@@ -159,11 +195,14 @@ def pipeline_JSON(path_to_protein, out_dir = './'):
         # Generate the key for the given map
         key = os.path.basename(other)
 
+        # Match some properties of the map
+        match = regex.match('.*_(s\d+.\d+)_(v\d+).*', key)
+
         # Parse the data from the given map
         content = parse_map(os.path.join(other, 'log'))
 
         # Dump the content in the correct format
-        json_out['builds'][key] = dump_map(content)
+        json_out['builds'][key] = dump_map(content, match)
 
     # Path to the output file
     OUT = os.path.join(out_dir, f'{protein}_log.json')
