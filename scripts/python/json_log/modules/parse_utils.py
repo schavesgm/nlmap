@@ -7,10 +7,10 @@ __all__ = ['parse_refmtz']
 from .Parser import Parser
 
 # Obtain some functions to clean the extracted data
-from .utils import clean_params
-from .utils import clean_residues
-from .utils import clean_sigma
-from .utils import clean_resparams
+from .clean_parsed import clean_params
+from .clean_parsed import clean_residues
+from .clean_parsed import clean_sigma
+from .clean_parsed import clean_resparams
 
 # Globals for the module
 BEG_PARAM = 'Final results'
@@ -19,6 +19,7 @@ BEG_RESID = '$TEXT:Result: $$ $$'
 END_RESID = '$$'
 
 def parse_refmtz(path):
+    ''' Parse the content of the reference .mtz build. '''
 
     # Assert the existence of the path
     assert os.path.exists(path), '%s does not exist' %(path)

@@ -86,14 +86,20 @@ residues (166 in the example above), `f` is the number of fragems (9) in
 the example above and `l` is the longest example (44 in the example
 above). The same logic is used for the other entries in __residues__.
 
-In the builds coming from map files, there is another entry called
-[__sigma__]. This entry contains a dictionary with values related to
-the level of noise in the map. Each key in the dictionary corresponds
-to a given `D limit`. Each `D limit` contains a list of several entries,
-being each entry the value `SIGMAA` at each iteration. The block of text
-used to parse this data is the following,
+In the builds coming from `.map` files, there is another entry called
+[__sigma__]. This entry contains a dictionary with values related to 
+the level of noise in the map. Each key in the dictionary corresponds to
+a given `D limit`, which is a measure of the distance. For each of these
+`D limit` keys, represented with a string with pattern `(r_max, r_min)`,
+there are several entries. Each of these keys contains a dictionary. 
+We parse the dictionary from a block of text similar to,
 
+>                     OLD                NEW       MEAN
 >       D Limits     SIGMAA     Shift    SIGMAA    W
 >     49.97--10.92   0.98820   -0.00985  0.97835   0.85496
 >     10.92-- 7.82   0.97993   -0.02773  0.95220   0.87391
 >      7.82-- 6.41   0.95209   -0.03389  0.91820   0.73430
+
+The key is the first column in the table. The entries are labelled as
+`SIGMAA`, `SHIFT`, `NEW_SIGMAA` and `MEAN_W`; they correspond to the
+columns first to fifth in the table above.

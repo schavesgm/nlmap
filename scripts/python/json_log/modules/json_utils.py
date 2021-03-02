@@ -13,10 +13,16 @@ class InlineList:
     def __init__(self, l):
         self._list = l
 
+class InlineDict:
+    def __init__(self, d):
+        self._dict = d
+
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, InlineList):
             return "##<{}>##".format(obj._list)
+        if isinstance(obj, InlineDict):
+            return '##<{}>##'.format(obj._dict)
         if isinstance(obj, numpy.ndarray):
             return obj.tolist() 
         return json.JSONEncoder.default(self, obj)
@@ -56,11 +62,11 @@ def dump_residues(residues_dict):
         of the residues data.
     '''
     return {
-        'resb'    : InlineList([p.resb for p in residues_dict]),
-        'prunning': InlineList([p.prun[0] for p in residues_dict]),
-        'chains'  : InlineList([p.chain for p in residues_dict]),
-        '%_build' : InlineList([p.cbuild[0] for p in residues_dict]),
-        '%_chain' : InlineList([p.cchain[0] for p in residues_dict]),
+        'resb'       : InlineList([p.resb for p in residues_dict]),
+        'prunning'   : InlineList([p.prun[0] for p in residues_dict]),
+        'chains'     : InlineList([p.chain for p in residues_dict]),
+        'comp_build' : InlineList([p.cbuild[0] for p in residues_dict]),
+        'comp_chain' : InlineList([p.cchain[0] for p in residues_dict]),
     }
 
 def dump_params(params_dict):
@@ -83,8 +89,16 @@ def dump_sigma(sigma_array):
     # Dictionary containing the final results
     results = {}
     for row in sigma_array:
-        key = str(row[0]) + '--' + str(row[1])
-        results[key] = InlineList(list(row[2:]))
+
+        # The key is a tuple of rmax, rmin
+        key = str('({}, {})'.format(row[0], row[1]))
+
+        results[key] = InlineDict({
+            'SIGMAA'    : row[2],
+            'SHIFT'     : row[3],
+            'NEW_SIGMAA': row[4],
+            'MEAN_W'    : row[5],
+        })
 
     return results
 # }}}
@@ -161,7 +175,8 @@ def pipeline_JSON(path_to_protein, out_dir = './'):
         b = json.dumps(json_out, cls = CustomEncoder, indent = 4)
 
         # Replace the marks to make the list inline
-        b = b.replace('"##<', "").replace('>##"', "")
+        b = b.replace('"##<', '').replace('>##"', '').replace('\'', '"')
+        # b = b.replace('"~~<', '').replace('>~~"', '').replace('\'', '"')
 
         # Write the data into the file stream
         f.write(b)

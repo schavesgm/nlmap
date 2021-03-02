@@ -8,8 +8,6 @@ if __name__ == '__main__':
     # Obtain the path to the protein
     path_to_protein = sys.argv[1]
 
-    print(path_to_protein)
-
     # Assert the existence of the protein
     assert os.path.exists(path_to_protein)
 
