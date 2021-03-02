@@ -33,6 +33,10 @@ def key_to_string(key):
     ''' Transform a given key to a string for readability. '''
     if key == 's':
         return 'noise_std'
+    elif key == 'h':
+        return 'denoise_param_square'
+    elif key == 'b':
+        return 'big_vol_extent'
     elif key == 'v':
         return 'small_vol_extent'
 
@@ -49,34 +53,30 @@ def dump_map(map_content, matches = None):
     # Dictionary containing the results
     results = {}
 
-    # Counter for number of matches
-    m = 1
-
+    # If matches is not None, then add information
     if matches is not None:
-        while True:
 
-            # Retrieve the next match
-            try:
-                match = matches.group(m)
-            except IndexError:
-                break
+        # Retrieve some contents of the matches
+        type_file = matches.group(1)
+        std_noise = matches.group(2)
+        denoise_h = matches.group(3)
+        bvol_ext  = matches.group(4)
+        svol_ext  = matches.group(5)
 
-            # Obtain the key and the value of match
-            key_val = regex.match('(\w)(.*)', match)
-
-            # Append the correct key and value to dictionary
-            key = key_to_string(key_val.group(1))
-
-            # Append the value to the dictionary
-            results[key] = float(key_val.group(2))
-
-            # Move to next match
-            m += 1
+        # Add some contents to the matches
+        if type_file == 'd': 
+            results['denoised'] = True
+            results['denoise_h_square'] = float(denoise_h)
+            results['noise_std']        = float(std_noise)
+            results['big_volume_ext']   = int(bvol_ext)
+            results['small_volume_ext'] = int(svol_ext)
+        elif type_file == 'n':
+            results['noise_std']        = float(std_noise)
 
     # Append the rest of the content to the dictionary
-    results['params']   = dump_params(map_content['params']),
-    results['residues'] = dump_residues(map_content['resids']),
-    results['sigma']    = dump_sigma(map_content['sigma']),
+    results['params']   = dump_params(map_content['params'])
+    results['residues'] = dump_residues(map_content['resids'])
+    results['sigma']    = dump_sigma(map_content['sigma'])
 
     return results
 # }}}
@@ -196,7 +196,7 @@ def pipeline_JSON(path_to_protein, out_dir = './'):
         key = os.path.basename(other)
 
         # Match some properties of the map
-        match = regex.match('.*_(s\d+.\d+)_(v\d+).*', key)
+        match = regex.match('(\w+)_s(\d+.\d+)_h(\d+.\d+)_b(\d+)_v(\d+).*', key)
 
         # Parse the data from the given map
         content = parse_map(os.path.join(other, 'log'))
