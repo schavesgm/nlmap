@@ -52,7 +52,7 @@ def dump_map(map_content):
 
     return {
         'params'   : dump_params(map_content['params']),
-        'resdiues' : dump_residues(map_content['resids']),
+        'residues' : dump_residues(map_content['resids']),
         'sigma'    : dump_sigma(map_content['sigma'])
     }
 # }}}
