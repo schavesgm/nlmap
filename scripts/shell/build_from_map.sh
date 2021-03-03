@@ -8,11 +8,21 @@ source ${CCP4PATH}/bin/ccp4.setup-sh
 source ./scripts/shell/checks.sh
 
 # -- Retrieve some command line variables
-MAP_FILE=${1}; PROT_PATH=${2}; OUT_FOLDER=${3}
+MAP_FILE=${1}; PROT_PATH=${2}; OUT_FOLDER=${3}; OVERWRITE=false
+
+# -- Boolean flag to not overwrite data
+[[ ! -z ${4} ]] && OVERWRITE=true
 
 # -- Generate some variables
-PROTEIN=$(basename ${PROT_PATH}); BASE_PATH=$(pwd)
+PROTEIN=$(basename ${PROT_PATH}); BASE_PATH=$(pwd) 
 OUT_PATH=${BASE_PATH}/out/${PROTEIN}/${OUT_FOLDER}
+BASE_MAP=$(basename ${MAP_FILE})
+
+# -- If the output folder exists, then decide to continue
+if [[ (-d ${OUT_PATH}) && (${OVERWRITE} == "false") ]]; then
+    info_message "${OUT_PATH} already exists and not overwriting."
+    exit 0
+fi
 
 # -- Generate some folders
 mkdir -p ${BASE_PATH}/out/${PROTEIN}/${OUT_FOLDER}
@@ -23,7 +33,7 @@ assert_dir_exists ${PROT_PATH}/maps
 assert_dir_exists ${OUT_PATH}
 
 # -- Log of the cinvfft files
-INV_LOG=${OUT_PATH}/log/invfft_${OUT_FOLDER}.log
+INV_LOG=${OUT_PATH}/log/invfft_${BASE_MAP/.map/}.log
 SIG_LOG=${OUT_PATH}/log/sigma.log
 BUC_LOG=${OUT_PATH}/log/buccaneer.log
 

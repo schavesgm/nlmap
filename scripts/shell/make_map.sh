@@ -19,7 +19,7 @@ MTZ_FILE="refmac.mtz"; MAP_FILE="refmac.map"
 
 # -- Path of input file and output files
 INP_PATH=${PROT_PATH}/${MTZ_FILE}
-OUT_PATH=${PROT_PATH}/maps/${MTZ_FILE}
+OUT_PATH=${PROT_PATH}/${MAP_FILE}
 
 # -- Fourier transform .mtz to obtain the .map file
 cfft -mtzin ${INP_PATH} -mapout ${OUT_PATH} -colin-fc "/*/*/[FWT,PHWT]" > /dev/null

@@ -8,7 +8,10 @@ source ${CCP4PATH}/bin/ccp4.setup-sh
 source ./scripts/shell/checks.sh
 
 # -- Retrieve some command line variables
-PROT_PATH=${1}; BASE_PATH=$(pwd) 
+PROT_PATH=${1}; BASE_PATH=$(pwd); OVERWRITE=false
+
+# -- Boolean flag to not overwrite data
+[[ ! -z ${2} ]] && OVERWRITE=true
 
 # -- Generate some variables
 PROTEIN=$(basename ${PROT_PATH}); 
@@ -16,6 +19,12 @@ OUT_PATH=${BASE_PATH}/out/${PROTEIN}/refmtz
 
 # -- Check if directories exist
 assert_dir_exists ${PROT_PATH}
+
+# -- If the output folder exists, then decide to continue
+if [[ (-d ${OUT_PATH}) && (${OVERWRITE} == "false") ]]; then
+    info_message "${OUT_PATH} already exists and not overwriting."
+    exit 0
+fi
 
 # -- Create the output directory if not present
 mkdir -p ${OUT_PATH} 
