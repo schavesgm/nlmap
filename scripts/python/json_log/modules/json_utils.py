@@ -8,6 +8,9 @@ from .parse_utils import parse_map
 
 __all__ = ['pipeline_JSON']
 
+# Simulation name string format
+SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_rs(\d+.\d+)_rc(\d+.\d+)'
+
 # Custom JSON encoder and container to serialise data {{{
 class InlineList:
     def __init__(self, l):
@@ -127,30 +130,29 @@ def get_other_maps(path_to_protein):
     return [os.path.join(path_to_protein, f) for f in ls if fmap(f)]
 
 # Dump all the data from a protein folder into a log file {{{
-def pipeline_JSON(path_to_protein, simulation_name, out_dir = './'):
+def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
     
     # Create out dir if it is not created
     os.makedirs(out_dir) if not os.path.exists(out_dir) else False
 
     # Generate some needed variables
-    refmtz_path = os.path.join(path_to_protein, 'refmtz')
-    refmap_path = os.path.join(path_to_protein, 'refmap')
-    promap_path = os.path.join(path_to_protein, simulation_name)
+    refmtz_path = os.path.join(path_out_protein, 'refmtz')
+    refmap_path = os.path.join(path_out_protein, 'refmap')
+    promap_path = os.path.join(path_out_protein, simulation_name)
 
     # Some needed assertions
-    assert os.path.exists(path_to_protein)
     assert os.path.exists(refmtz_path)
     assert os.path.exists(refmap_path)
     assert os.path.exists(promap_path)
 
     # Obtain all the other directories in the folder
-    other_maps = os.listdir(os.path.join(path_to_protein, simulation_name))
+    other_maps = os.listdir(os.path.join(path_out_protein, simulation_name))
 
     # Save the protein name after assertions
-    protein = os.path.basename(path_to_protein)
+    protein = os.path.basename(path_out_protein)
 
     # Match some information in the simulation name
-    matches = regex.match('s(\d+.\d+)_h(\d+.\d+)_b(\d+)_v(\d+)', simulation_name)
+    matches = regex.match(SIM_FORMAT, simulation_name)
 
     # Parse the data from the reference builds
     refmtz = parse_refmtz(os.path.join(refmtz_path, 'log'))
@@ -163,8 +165,8 @@ def pipeline_JSON(path_to_protein, simulation_name, out_dir = './'):
         'resolution'    : refmtz['resrange'],
         'noise_std'     : float(matches.group(1)),
         'denoise_hsqrt' : float(matches.group(2)),
-        'big_vol_ext'   : int(matches.group(3)),
-        'small_vol_ext' : int(matches.group(4)),
+        'r_search'      : float(matches.group(3)),
+        'r_comparison'  : float(matches.group(4)),
         'builds' : {
             'refmtz' : dump_refmtz(refmtz),
             'refmap' : dump_map(refmap),

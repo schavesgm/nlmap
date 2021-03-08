@@ -21,8 +21,8 @@ source ./scripts/shell/checks.sh
 
 sigma=$(printf %.4f 0.1)
 hsqrt=$(printf %.4f 0.05)
-bvole=$(printf %d 5)
-svole=$(printf %d 2)
+rsrch=$(printf %.4f 2)
+rcomp=$(printf %.4f 1)
 
 # -- Directories to the scripts
 MAKE_MAP="./scripts/shell/make_map.sh"
@@ -30,12 +30,13 @@ BUILD_MTZ="./scripts/shell/build_from_mtz.sh"
 BUILD_MAP="./scripts/shell/build_from_map.sh"
 JSON_LOG="./scripts/python/json_log/json_log.py"
 HIST_PLOT="./scripts/python/map_histograms/plot_histograms.py"
+LOG_PLOT="./scripts/python/plot_log/plot_log.py"
 
 # -- Name of the protein to process (THIS HAS TO BE COMMAND LINED)
 PROTEIN="rnase"; PROT_PATH="$(pwd)/data/${PROTEIN}";
 
 # -- Specific name of the simulation name
-SIM_NAME="s${sigma}_h${hsqrt}_b${bvole}_v${svole}"
+SIM_NAME="s${sigma}_h${hsqrt}_rs${rsrch}_rc${rcomp}"
 
 # -- Check if data exists and check if protein exists
 assert_dir_exists "data" 
@@ -73,13 +74,16 @@ for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
 
     # Process the map with the correct script
     ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
-
 done
 
 # -- Obtain a log file from the protein data
 echo " ** [Creating a log file from the processed pipeline]"
-${JSON_LOG} ./out/${PROTEIN} ${SIM_NAME}
+${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
 
 # -- Obtain the histogram plot from the data
 echo " ** [Generating histogram plot from the processed pipeline]"
 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
+
+# -- Generate the plots from the log data
+echo " ** [Generating log plots from the processed pipeline]"
+${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}

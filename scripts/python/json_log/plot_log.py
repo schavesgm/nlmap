@@ -1,3 +1,5 @@
+#!/bin/python3
+
 import os, sys
 
 # Load the JSON parser module

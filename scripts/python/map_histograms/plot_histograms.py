@@ -21,6 +21,9 @@ def check_font_exists(font_name):
 
     return False
 
+# Simulation name string format
+SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_rs(\d+.\d+)_rc(\d+.\d+)'
+
 if __name__ == '__main__':
 
     # -- Set some matplotlib's parameters
@@ -57,11 +60,11 @@ if __name__ == '__main__':
     fig = plt.figure(figsize = (12, 8))
 
     # Match the simulation data from the simulation name
-    matches = regex.match(r's(\d+.\d+)_h(\d+.\d+)_b(\d+)_v(\d+)', sim_name)
+    matches = regex.match(SIM_FORMAT, sim_name)
     
     # Add the simulation name as supertitle
     fig.suptitle(
-        's = {}, h^2 = {}, b = {}, v = {}'.format(
+        's = {}, h^2 = {}, rs = {} (A), rc = {} (A)'.format(
             matches.group(1), matches.group(2),
             matches.group(3), matches.group(4)
         ), y = 0.95
