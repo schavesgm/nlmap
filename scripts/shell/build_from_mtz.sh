@@ -44,7 +44,7 @@ cd ${OUT_PATH}; END_PATH=$(pwd)
 assert_location ${BASE_PATH} out/${PROTEIN}/refmtz ${END_PATH}
 
 # -- Remove all files in the current directory
-rm -r ./* > /dev/null 2> &1
+rm -r ./* >/dev/null 2>&1
 
 # -- Create the log directory
 mkdir -p ${OUT_PATH}/log
