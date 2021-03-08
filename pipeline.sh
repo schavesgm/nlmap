@@ -14,15 +14,13 @@ export CCP4PATH=~/PlacementSTFC/software/ccp4-7.1
 source ./scripts/shell/checks.sh
 
 # -- Set some needed variables for the simulation
-# sigma=$(printf %.4f ${1}); assert_var_exists "noise_std"   ${1}
-# hsqrt=$(printf %.4f ${2}); assert_var_exists "h_square"    ${2}
-# bvole=$(printf %d ${3});   assert_var_exists "big_vol_e"   ${3}
-# svole=$(printf %d ${4});   assert_var_exists "small_vol_e" ${4}
+sigma=$(printf %.4f ${1}); assert_var_exists "noise_std"   ${1}
+hsqrt=$(printf %.4f ${2}); assert_var_exists "h_square"    ${2}
+bvole=$(printf %d ${3});   assert_var_exists "big_vol_e"   ${3}
+svole=$(printf %d ${4});   assert_var_exists "small_vol_e" ${4}
 
-sigma=$(printf %.4f 0.1)
-hsqrt=$(printf %.4f 0.05)
-rsrch=$(printf %.4f 2)
-rcomp=$(printf %.4f 1)
+# -- Build the processing code
+make -j
 
 # -- Directories to the scripts
 MAKE_MAP="./scripts/shell/make_map.sh"
@@ -56,6 +54,10 @@ ${BUILD_MTZ} ${PROT_PATH}
 # -- Build the reference model from the .map file
 echo " ** [Building reference model from reference refmac.map]"
 ${BUILD_MAP} refmac.map ${PROT_PATH} refmap
+
+# -- Generate the noisy and denoised versions of the map
+echo " ** [Processing the maps using ./denoise_map]"
+./denoise_map ${PROT_PATH}/refmac.map ${sigma} ${hsqrt} ${rsrch} ${rcomp}
  
 # -- Build a model for each processed map file
 for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
