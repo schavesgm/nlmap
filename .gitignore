@@ -3,5 +3,9 @@ data
 out
 log
 
+# Ignore executable
+denoise_map
+
 # Ignore pycache files
 __pycache__
+
