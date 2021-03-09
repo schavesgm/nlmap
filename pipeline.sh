@@ -10,16 +10,19 @@
 # -- Obtain the base path where the code is located
 export BASE_PATH="$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
 
-# -- Source some configuration and needed functions
-source ${BASE_PATH}/config.sh
+# -- Source some assertion functions
 source ${BASE_PATH}/scripts/shell/checks.sh
 
+# -- Check that 
+assert_var_exists "CCP4_PATH" ${CCP4_PATH}
+echo " ** [Path to CCP4 software is ${CCP4_PATH}]"
+
 # -- Set some needed variables for the simulation
-PROTEIN=${1};              assert_var_exists "protein"   ${1}
-sigma=$(printf %.4f ${2}); assert_var_exists "noise_std" ${2}
-hsqrt=$(printf %.4f ${3}); assert_var_exists "h_square"  ${3}
-rsrch=$(printf %.4f ${4});   assert_var_exists "r_search"  ${4}
-rcomp=$(printf %.4f ${5});   assert_var_exists "r_compar"  ${5}
+PROTEIN=${1};               assert_var_exists "protein"   ${1}
+sigma=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
+hsqrt=$(printf %.4f ${3});  assert_var_exists "h_square"  ${3}
+rsrch=$(printf %.4f ${4});  assert_var_exists "r_search"  ${4}
+rcomp=$(printf %.4f ${5});  assert_var_exists "r_compar"  ${5}
 
 # -- Directories to the scripts
 MAKE_MAP="${BASE_PATH}/scripts/shell/make_map.sh"

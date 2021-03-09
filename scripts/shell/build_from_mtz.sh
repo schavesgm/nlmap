@@ -2,7 +2,7 @@
 # -- Build a model from a .mtz file
 
 # -- Source the configuration of CCP4
-source ${CCP4PATH}/bin/ccp4.setup-sh
+source ${CCP4_PATH}/bin/ccp4.setup-sh
 
 # -- Source some check functions
 source ${BASE_PATH}/scripts/shell/checks.sh
