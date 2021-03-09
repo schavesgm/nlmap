@@ -19,10 +19,10 @@ echo " ** [Path to CCP4 software is ${CCP4_PATH}]"
 
 # -- Set some needed variables for the simulation
 PROTEIN=${1};               assert_var_exists "protein"   ${1}
-sigma=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
-hsqrt=$(printf %.4f ${3});  assert_var_exists "h_square"  ${3}
-rsrch=$(printf %.4f ${4});  assert_var_exists "r_search"  ${4}
-rcomp=$(printf %.4f ${5});  assert_var_exists "r_compar"  ${5}
+SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
+HSQRT=$(printf %.4f ${3});  assert_var_exists "h_square"  ${3}
+RSRCH=$(printf %.4f ${4});  assert_var_exists "r_search"  ${4}
+RCOMP=$(printf %.4f ${5});  assert_var_exists "r_compar"  ${5}
 
 # -- Directories to the scripts
 MAKE_MAP="${BASE_PATH}/scripts/shell/make_map.sh"
@@ -40,7 +40,7 @@ assert_dir_exists "${DATA_PATH}"
 assert_dir_exists "${PROT_PATH}"
 
 # -- Specific name of the simulation name
-SIM_NAME="s${sigma}_h${hsqrt}_rs${rsrch}_rc${rcomp}"
+SIM_NAME="s${SIGMA}_h${HSQRT}_rs${RSRCH}_rc${RCOMP}"
  
 # -- Create some directories if not present
 mkdir -p ${DATA_PATH}/${PROTEIN}/maps
@@ -63,7 +63,7 @@ echo " ** [Compiling the processing C++ code]"
 
 # -- Generate the noisy and denoised versions of the map
 echo " ** [Processing the maps using ./denoise_map]"
-${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${sigma} ${hsqrt} ${rsrch} ${rcomp}
+${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HSQRT} ${RSRCH} ${RCOMP}
 
 # -- Build a model for each processed map file
 for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
