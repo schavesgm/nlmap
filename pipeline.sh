@@ -7,8 +7,8 @@
 # -- json_log.py path_to_out_protein
 # -- plot_histogram.py simulation_name path_to_protein_data path_to_out_log
 
-# -- Export the location of the CCP4 software
-export CCP4PATH=~/PlacementSTFC/software/ccp4-7.1
+# -- Source some configuration
+source ./config.sh
 
 # -- Source some needed scripts
 source ./scripts/shell/checks.sh
