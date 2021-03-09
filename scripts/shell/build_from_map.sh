@@ -5,17 +5,18 @@
 source ${CCP4PATH}/bin/ccp4.setup-sh
 
 # -- Source some check functions
-source ./scripts/shell/checks.sh
+source ${BASE_PATH}/scripts/shell/checks.sh
 
 # -- Retrieve some command line variables
-MAP_FILE=${1}; PROT_PATH=${2}; OUT_FOLDER=${3}; OVERWRITE=false
+MAP_FILE=${1}; PROT_PATH=${2}; OUT_FOLDER=${3}; 
+OVERWRITE=false; RUN_PATH=$(pwd)
 
 # -- Boolean flag to not overwrite data
 [[ ! -z ${4} ]] && OVERWRITE=true
 
 # -- Generate some variables
-PROTEIN=$(basename ${PROT_PATH}); BASE_PATH=$(pwd) 
-OUT_PATH=${BASE_PATH}/out/${PROTEIN}/${OUT_FOLDER}
+PROTEIN=$(basename ${PROT_PATH});
+OUT_PATH=${RUN_PATH}/out/${PROTEIN}/${OUT_FOLDER}
 BASE_MAP=$(basename ${MAP_FILE})
 
 # -- If the output folder exists, then decide to continue
@@ -25,7 +26,7 @@ if [[ (-d ${OUT_PATH}) && (${OVERWRITE} == "false") ]]; then
 fi
 
 # -- Generate some folders
-mkdir -p ${BASE_PATH}/out/${PROTEIN}/${OUT_FOLDER}
+mkdir -p ${RUN_PATH}/out/${PROTEIN}/${OUT_FOLDER}
 
 # -- Check if directories exist
 assert_dir_exists ${PROT_PATH}
@@ -41,7 +42,7 @@ BUC_LOG=${OUT_PATH}/log/buccaneer.log
 cd ${OUT_PATH}; END_PATH=$(pwd)
  
 # -- Assert we are in the correct directory
-assert_location ${BASE_PATH} out/${PROTEIN}/${OUT_FOLDER} ${END_PATH}
+assert_location ${RUN_PATH} out/${PROTEIN}/${OUT_FOLDER} ${END_PATH}
 
 # -- Remove all files in the current directory
 rm -r ./* > /dev/null 2>&1

@@ -5,17 +5,17 @@
 source ${CCP4PATH}/bin/ccp4.setup-sh
 
 # -- Source some check functions
-source ./scripts/shell/checks.sh
+source ${BASE_PATH}/scripts/shell/checks.sh
 
 # -- Retrieve some command line variables
-PROT_PATH=${1}; BASE_PATH=$(pwd); OVERWRITE=false
+PROT_PATH=${1}; RUN_PATH=$(pwd); OVERWRITE=false
 
 # -- Boolean flag to not overwrite data
 [[ ! -z ${2} ]] && OVERWRITE=true
 
 # -- Generate some variables
 PROTEIN=$(basename ${PROT_PATH}); 
-OUT_PATH=${BASE_PATH}/out/${PROTEIN}/refmtz
+OUT_PATH=${RUN_PATH}/out/${PROTEIN}/refmtz
 
 # -- Check if directories exist
 assert_dir_exists ${PROT_PATH}
@@ -39,9 +39,9 @@ BUC_LOG=${OUT_PATH}/log/buccaneer.log
 
 # -- Move to directory and save new directory
 cd ${OUT_PATH}; END_PATH=$(pwd)
-
+ 
 # -- Assert we are in the correct directory
-assert_location ${BASE_PATH} out/${PROTEIN}/refmtz ${END_PATH}
+assert_location ${RUN_PATH} out/${PROTEIN}/refmtz ${END_PATH}
 
 # -- Remove all files in the current directory
 rm -r ./* >/dev/null 2>&1

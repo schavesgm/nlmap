@@ -5,7 +5,7 @@
 source ${CCP4PATH}/bin/ccp4.setup-sh
 
 # -- Source some checks functions
-source ./scripts/shell/checks.sh
+source ${BASE_PATH}/scripts/shell/checks.sh
 
 # -- Retrieve some command line information
 PROT_PATH=${1}; PROTEIN=$(basename ${PROT_PATH})

@@ -7,41 +7,40 @@
 # -- json_log.py path_to_out_protein
 # -- plot_histogram.py simulation_name path_to_protein_data path_to_out_log
 
-# -- Source some configuration
-source ./config.sh
+# -- Obtain the base path where the code is located
+export BASE_PATH="$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
 
-# -- Source some needed scripts
-source ./scripts/shell/checks.sh
+# -- Source some configuration and needed functions
+source ${BASE_PATH}/config.sh
+source ${BASE_PATH}/scripts/shell/checks.sh
 
 # -- Set some needed variables for the simulation
-sigma=$(printf %.4f ${1}); assert_var_exists "noise_std"   ${1}
-hsqrt=$(printf %.4f ${2}); assert_var_exists "h_square"    ${2}
-bvole=$(printf %d ${3});   assert_var_exists "big_vol_e"   ${3}
-svole=$(printf %d ${4});   assert_var_exists "small_vol_e" ${4}
-
-# -- Build the processing code
-make -j
+PROTEIN=${1};              assert_var_exists "protein"   ${1}
+sigma=$(printf %.4f ${2}); assert_var_exists "noise_std" ${2}
+hsqrt=$(printf %.4f ${3}); assert_var_exists "h_square"  ${3}
+rsrch=$(printf %.4f ${4});   assert_var_exists "r_search"  ${4}
+rcomp=$(printf %.4f ${5});   assert_var_exists "r_compar"  ${5}
 
 # -- Directories to the scripts
-MAKE_MAP="./scripts/shell/make_map.sh"
-BUILD_MTZ="./scripts/shell/build_from_mtz.sh"
-BUILD_MAP="./scripts/shell/build_from_map.sh"
-JSON_LOG="./scripts/python/json_log/json_log.py"
-HIST_PLOT="./scripts/python/map_histograms/plot_histograms.py"
-LOG_PLOT="./scripts/python/plot_log/plot_log.py"
+MAKE_MAP="${BASE_PATH}/scripts/shell/make_map.sh"
+BUILD_MTZ="${BASE_PATH}/scripts/shell/build_from_mtz.sh"
+BUILD_MAP="${BASE_PATH}/scripts/shell/build_from_map.sh"
+JSON_LOG="${BASE_PATH}/scripts/python/json_log/json_log.py"
+HIST_PLOT="${BASE_PATH}/scripts/python/map_histograms/plot_histograms.py"
+LOG_PLOT="${BASE_PATH}/scripts/python/plot_log/plot_log.py"
 
-# -- Name of the protein to process (THIS HAS TO BE COMMAND LINED)
-PROTEIN="rnase"; PROT_PATH="$(pwd)/data/${PROTEIN}";
+# -- Name of the protein to process
+DATA_PATH="$(pwd)/data"; PROT_PATH="${DATA_PATH}/${PROTEIN}"
+
+# -- Check if data directory exists and check if protein exists
+assert_dir_exists "${DATA_PATH}" 
+assert_dir_exists "${PROT_PATH}"
 
 # -- Specific name of the simulation name
 SIM_NAME="s${sigma}_h${hsqrt}_rs${rsrch}_rc${rcomp}"
-
-# -- Check if data exists and check if protein exists
-assert_dir_exists "data" 
-assert_dir_exists "${PROT_PATH}"
  
 # -- Create some directories if not present
-mkdir -p data/${PROTEIN}/maps
+mkdir -p ${DATA_PATH}/${PROTEIN}/maps
 
 # -- Create a .map file from the .mtz file
 echo " ** [Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)]"
@@ -50,15 +49,19 @@ ${MAKE_MAP} ${PROT_PATH}
 # -- Build the reference model from the .mtz file
 echo " ** [Building reference model from reference refmac.mtz]"
 ${BUILD_MTZ} ${PROT_PATH}
-
+ 
 # -- Build the reference model from the .map file
 echo " ** [Building reference model from reference refmac.map]"
 ${BUILD_MAP} refmac.map ${PROT_PATH} refmap
 
+# -- Build the processing code
+echo " ** [Compiling the processing C++ code]"
+(cd ${BASE_PATH}; make -j)
+
 # -- Generate the noisy and denoised versions of the map
 echo " ** [Processing the maps using ./denoise_map]"
-./denoise_map ${PROT_PATH}/refmac.map ${sigma} ${hsqrt} ${rsrch} ${rcomp}
- 
+${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${sigma} ${hsqrt} ${rsrch} ${rcomp}
+
 # -- Build a model for each processed map file
 for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
 
@@ -77,7 +80,7 @@ for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
     # Process the map with the correct script
     ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
 done
-
+ 
 # -- Obtain a log file from the protein data
 echo " ** [Creating a log file from the processed pipeline]"
 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
