@@ -1,5 +1,8 @@
 #!/bin/python3
 
+import matplotlib as mpl
+mpl.use('pdf')
+
 import os, sys
 
 # Load the JSON parser module

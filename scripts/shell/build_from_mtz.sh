@@ -56,10 +56,10 @@ LABIN  FILE 2 E1=PHIC_ALL_LS E2=FOM
 eof
 
 # -- Build the model
-ccp4-python -u $CCP4/bin/buccaneer_pipeline -stdin > ${BUC_LOG} <<eof
+ccp4-python -u ${CCP4_PATH}/bin/buccaneer_pipeline -stdin > ${BUC_LOG} <<eof
 title Reference build
-pdbin-ref ${CCP4PATH}/lib/data/reference_structures/reference-1tqw.pdb
-mtzin-ref ${CCP4PATH}/lib/data/reference_structures/reference-1tqw.mtz
+pdbin-ref ${CCP4_PATH}/lib/data/reference_structures/reference-1tqw.pdb
+mtzin-ref ${CCP4_PATH}/lib/data/reference_structures/reference-1tqw.mtz
 colin-ref-fo [/*/*/FP.F_sigF.F,/*/*/FP.F_sigF.sigF]
 colin-ref-hl [/*/*/FC.ABCD.A,/*/*/FC.ABCD.B,/*/*/FC.ABCD.C,/*/*/FC.ABCD.D]
 seqin ${PROT_PATH}/sequence.seq

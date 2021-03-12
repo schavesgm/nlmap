@@ -2,6 +2,10 @@
 
 import os, sys, regex
 import matplotlib as mpl
+
+# Set the backend engine
+mpl.use('pdf')
+
 import matplotlib.pyplot as plt
 
 # User defined modules
@@ -31,7 +35,7 @@ if __name__ == '__main__':
     mpl.rcParams['font.size'] = 12
     
     if check_font_exists('iosevka-slab'): 
-        mpl.rcParams['font.family'] = 'Iosevka Slab'
+        mpl.rcParams['font.family'] = 'iosevka-slab'
 
     # Name of the current simulation
     sim_name = sys.argv[1]
@@ -82,7 +86,7 @@ if __name__ == '__main__':
         # Add some properties to the axis
         axis.set_xlabel('Map value')
         axis.set_ylabel('Density')
-        axis.grid('#ccc')
+        axis.grid(True, color = '#cccccc')
         axis.set_facecolor('#f9f9fe')
     
         # Set the title of the axis
@@ -90,7 +94,7 @@ if __name__ == '__main__':
     
         # Histogram the data into the axis
         histomap.histogram(
-            axis, 100, color = '#407294', density = True, alpha = 0.8
+            axis, 100, color = '#407294', alpha = 0.8
         )
 
     # Increase distance between subplots

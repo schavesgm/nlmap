@@ -8,21 +8,20 @@
 # -- plot_histogram.py simulation_name path_to_protein_data path_to_out_log
 
 # -- Obtain the base path where the code is located
-export BASE_PATH="$(cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)"
+export BASE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 
 # -- Source some assertion functions
 source ${BASE_PATH}/scripts/shell/checks.sh
 
 # -- Check that 
 assert_var_exists "CCP4_PATH" ${CCP4_PATH}
-echo " ** [Path to CCP4 software is ${CCP4_PATH}]"
 
 # -- Set some needed variables for the simulation
-PROTEIN=${1};               assert_var_exists "protein"   ${1}
-SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
-HSQRT=$(printf %.4f ${3});  assert_var_exists "h_square"  ${3}
-RSRCH=$(printf %.4f ${4});  assert_var_exists "r_search"  ${4}
-RCOMP=$(printf %.4f ${5});  assert_var_exists "r_compar"  ${5}
+PROTEIN=${1};               # assert_var_exists "protein"   ${1}
+SIGMA=$(printf %.4f ${2});  # assert_var_exists "noise_std" ${2}
+HSQRT=$(printf %.4f ${3});  # assert_var_exists "h_square"  ${3}
+RSRCH=$(printf %.4f ${4});  # assert_var_exists "r_search"  ${4}
+RCOMP=$(printf %.4f ${5});  # assert_var_exists "r_compar"  ${5}
 
 # -- Directories to the scripts
 MAKE_MAP="${BASE_PATH}/scripts/shell/make_map.sh"
@@ -45,24 +44,32 @@ SIM_NAME="s${SIGMA}_h${HSQRT}_rs${RSRCH}_rc${RCOMP}"
 # -- Create some directories if not present
 mkdir -p ${DATA_PATH}/${PROTEIN}/maps
 
+# -- Log some information to the console
+header_message "Path to CCP4 software is ${CCP4_PATH}"
+header_message "Protein selected: ${PROTEIN}"
+header_message "Standard deviation of added noise: ${SIGMA}"
+header_message "Denoising parameter squared: ${HSQRT}"
+header_message "Radious of search: ${RSRCH} (A)"
+header_message "Radious of comparison: ${RCOMP} (A)"
+
 # -- Create a .map file from the .mtz file
-echo " ** [Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)]"
+header_message "Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)"
 ${MAKE_MAP} ${PROT_PATH}
 
 # -- Build the reference model from the .mtz file
-echo " ** [Building reference model from reference refmac.mtz]"
-${BUILD_MTZ} ${PROT_PATH}
- 
+header_message "Building reference model from reference refmac.mtz"
+${BUILD_MTZ} ${PROT_PATH} false
+  
 # -- Build the reference model from the .map file
-echo " ** [Building reference model from reference refmac.map]"
-${BUILD_MAP} refmac.map ${PROT_PATH} refmap
+header_message "Building reference model from reference refmac.map"
+${BUILD_MAP} refmac.map ${PROT_PATH} refmap false
 
 # -- Build the processing code
-echo " ** [Compiling the processing C++ code]"
+header_message "Compiling the processing C++ code"
 (cd ${BASE_PATH}; make -j)
 
 # -- Generate the noisy and denoised versions of the map
-echo " ** [Processing the maps using ./denoise_map]"
+header_message "Processing the maps using ./denoise_map"
 ${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HSQRT} ${RSRCH} ${RCOMP}
 
 # -- Build a model for each processed map file
@@ -72,7 +79,7 @@ for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
     base=$(basename -- ${file})
 
     # Echo some data to the console
-    echo " ** [Building model from map file ${base}]"
+    header_message "Building model from map file ${base}"
 
     # Location of the map file inside ${PROT_PATH}
     MAP_LOC=maps/${SIM_NAME}/${base}
@@ -85,13 +92,13 @@ for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
 done
  
 # -- Obtain a log file from the protein data
-echo " ** [Creating a log file from the processed pipeline]"
-${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
+header_message "Creating a log file from the processed pipeline"
+python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
 
 # -- Obtain the histogram plot from the data
-echo " ** [Generating histogram plot from the processed pipeline]"
-${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
+header_message "Generating histogram plot from the processed pipeline"
+python3 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
 
 # -- Generate the plots from the log data
-echo " ** [Generating log plots from the processed pipeline]"
-${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}
+header_message "Generating log plots from the processed pipeline"
+python3 ${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}

@@ -63,9 +63,9 @@ def plot_parameters(log_path, show = False):
     axis_Rf = fig.add_subplot(1, 2, 2)
 
     # Set some important properties of the axis
-    axis_Rw.set_xlabel('cycle'); axis_Rf.set_xlabel('cycle')
-    axis_Rw.set_ylabel('Rw');    axis_Rf.set_ylabel('Rf')
-    axis_Rw.grid('#ccc');        axis_Rf.grid('#ccc')
+    axis_Rw.set_xlabel('cycle');   axis_Rf.set_xlabel('cycle')
+    axis_Rw.set_ylabel('Rw');      axis_Rf.set_ylabel('Rf')
+    axis_Rw.grid(True, '#ffffff'); axis_Rf.grid(True, '#cccccc')
     
     # Set the title in the plot
     title = '{} ({} -- {}).  s = {}, h^2 = {}, rs = {} (A), rc = {} (A)'
@@ -166,11 +166,11 @@ def plot_residues(log_path, show = False):
     axis_comp_build.set_ylabel(r'Completeness by residues built')
     axis_comp_chain.set_ylabel(r'Completeness of chains')
 
-    axis_residues.grid(color = '#ccc')
-    axis_prunning.grid(color = '#ccc')
-    axis_chains.grid(color = '#ccc')
-    axis_comp_build.grid(color = '#ccc')
-    axis_comp_chain.grid(color = '#ccc')
+    axis_residues.grid(True, color = '#cccccc')
+    axis_prunning.grid(True, color = '#cccccc')
+    axis_chains.grid(True, color = '#cccccc')
+    axis_comp_build.grid(True, color = '#cccccc')
+    axis_comp_chain.grid(True, color = '#cccccc')
 
     # Iterate through all builds in the log file
     for b, (key, items) in enumerate(json_dict['builds'].items()):
