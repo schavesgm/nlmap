@@ -1,7 +1,7 @@
 #!/bin/python3
 
-import matplotlib as mpl
-mpl.use('pdf')
+import matplotlib
+matplotlib.use('pdf')
 
 import os, sys
 

@@ -1,6 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as ml
+import numpy as np
 import os
 
 # User defined modules
@@ -12,26 +11,8 @@ __all__ = ['plot_parameters', 'plot_residues']
 COLORS = ['#49443d', '#c1a188', '#0073e5', '#7ddc1f']
 MARKER = ['+', 'x', '*', 'd']
 
-def check_font_exists(font_name):
-    ''' Check if a font exists in matplotlib. '''
-    import matplotlib.font_manager as fm
-
-    # Get all fonts available
-    fonts = fm.findSystemFonts(fontpaths=None, fontext='ttf')
-
-    # Loop over the fonts and find any ocurrence
-    for font in fonts:
-        if font_name in font:
-            return True
-
-    return False
-
 # -- Set some matplotlib's parameters
-ml.rcParams['mathtext.fontset'] = 'cm'
-ml.rcParams['font.size'] = 12
-
-if check_font_exists('iosevka-slab'): 
-    ml.rcParams['font.family'] = 'Iosevka Slab'
+plt.rcParams['font.size'] = 12
 
 # Plot the parameters from the log path for each build {{{
 def plot_parameters(log_path, show = False):

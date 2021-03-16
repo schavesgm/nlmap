@@ -11,31 +11,13 @@ import matplotlib.pyplot as plt
 # User defined modules
 from modules import Histomap
 
-def check_font_exists(font_name):
-    ''' Check if a font exists in matplotlib. '''
-    import matplotlib.font_manager as fm
-
-    # Get all fonts available
-    fonts = fm.findSystemFonts(fontpaths=None, fontext='ttf')
-
-    # Loop over the fonts and find any ocurrence
-    for font in fonts:
-        if font_name in font:
-            return True
-
-    return False
-
 # Simulation name string format
 SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_rs(\d+.\d+)_rc(\d+.\d+)'
 
 if __name__ == '__main__':
 
     # -- Set some matplotlib's parameters
-    mpl.rcParams['mathtext.fontset'] = 'cm'
     mpl.rcParams['font.size'] = 12
-    
-    if check_font_exists('iosevka-slab'): 
-        mpl.rcParams['font.family'] = 'iosevka-slab'
 
     # Name of the current simulation
     sim_name = sys.argv[1]
@@ -103,4 +85,4 @@ if __name__ == '__main__':
         wspace = 0.25, hspace = 0.2,
     )
 
-    plt.savefig(os.path.join(out_path, 'histogram.pdf'))
+    plt.savefig(os.path.join(out_path, 'histogram'))

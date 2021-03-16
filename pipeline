@@ -58,20 +58,16 @@ ${MAKE_MAP} ${PROT_PATH}
 
 # -- Build the reference model from the .mtz file
 header_message "Building reference model from reference refmac.mtz"
-${BUILD_MTZ} ${PROT_PATH} false
-  
+${BUILD_MTZ} ${PROT_PATH}
+   
 # -- Build the reference model from the .map file
 header_message "Building reference model from reference refmac.map"
-${BUILD_MAP} refmac.map ${PROT_PATH} refmap false
-
-# -- Build the processing code
-header_message "Compiling the processing C++ code"
-(cd ${BASE_PATH}; make -j)
-
+${BUILD_MAP} refmac.map ${PROT_PATH} refmap
+  
 # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
 ${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HSQRT} ${RSRCH} ${RCOMP}
-
+ 
 # -- Build a model for each processed map file
 for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
 
