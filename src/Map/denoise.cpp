@@ -1,88 +1,157 @@
 #include <Map.hpp>
+#include <numeric>
 
 // Construct the average of all points in a quadrant
-vec_q construct_quadrant(
-    const std::vector<float>* vals_in_quad, const float& m_central
-) {
+vec_q construct_quadrant(const std::vector<float>* vals_in_quad, const float& m_central) 
+{
     // Generate the vector containing the average in each quadrant
     vec_q quadrant_avg(Quadrant::NQ);
 
-    // Calculate the average for each quadrant
-    for (byte q = 0; q < Quadrant::NQ; q++) {
+    // Calculate the average for each quadrant -- adding the central
+    quadrant_avg[Quadrant::q0] = std::accumulate(
+        vals_in_quad[Quadrant::q0].begin(), 
+        vals_in_quad[Quadrant::q0].end(),
+        m_central
+    ) / (vals_in_quad[Quadrant::q0].size() + 1);
 
-        // Variable that will hold the average
-        float avg = 0.0f;
+    quadrant_avg[Quadrant::q1] = std::accumulate(
+        vals_in_quad[Quadrant::q1].begin(), 
+        vals_in_quad[Quadrant::q1].end(),
+        m_central
+    ) / (vals_in_quad[Quadrant::q1].size() + 1);
 
-        // Number points in the q quadrant
-        const size_t N = vals_in_quad[q].size();
+    quadrant_avg[Quadrant::q2] = std::accumulate(
+        vals_in_quad[Quadrant::q2].begin(), 
+        vals_in_quad[Quadrant::q2].end(),
+        m_central
+    ) / (vals_in_quad[Quadrant::q2].size() + 1);
 
-        // Calculate the average in the quadrant
-        for (auto& m : vals_in_quad[q]) avg += m;
+    quadrant_avg[Quadrant::q3] = std::accumulate(
+        vals_in_quad[Quadrant::q3].begin(), 
+        vals_in_quad[Quadrant::q3].end(),
+        m_central
+    ) / (vals_in_quad[Quadrant::q3].size() + 1);
 
-        // If the quadrant is not 0b111 = 7, then add central point
-        if (q != 0b111) {
-            avg += m_central; avg = avg / (N + 1);
-        } else {
-            avg = avg / N;
-        }
+    quadrant_avg[Quadrant::q4] = std::accumulate(
+        vals_in_quad[Quadrant::q4].begin(), 
+        vals_in_quad[Quadrant::q4].end(),
+        m_central
+    ) / (vals_in_quad[Quadrant::q4].size() + 1);
 
-        // Get the average in its corresponding quadrant
-        quadrant_avg[q] = avg;
-    }
+    quadrant_avg[Quadrant::q5] = std::accumulate(
+        vals_in_quad[Quadrant::q5].begin(), 
+        vals_in_quad[Quadrant::q5].end(),
+        m_central
+    ) / (vals_in_quad[Quadrant::q5].size() + 1);
+
+    quadrant_avg[Quadrant::q6] = std::accumulate(
+        vals_in_quad[Quadrant::q6].begin(), 
+        vals_in_quad[Quadrant::q6].end(),
+        m_central
+    ) / (vals_in_quad[Quadrant::q6].size() + 1);
+
+    // The last quadrant contains the central value
+    quadrant_avg[Quadrant::q7] = std::accumulate(
+        vals_in_quad[Quadrant::q7].begin(), 
+        vals_in_quad[Quadrant::q7].end(),
+        0.0f
+    ) / (vals_in_quad[Quadrant::q7].size());
 
     return quadrant_avg;
 }
 
 // Construct the average of points around a given grid point (u, v, w)
 vec_q Map::get_quadrants(
-    const int& u, const int& v, const int& w, const double& r_max
+    const int& u, const int& v, const int& w, 
+    const std::vector<gemmi::GridBase<float>::Point>& table_of_indices
 ) {
-    // Get the Fractional coordinates of the grid values
-    const Fractional fp = get_fractional(u, v, w);
-
     // Vector that will contain the values for each quadrant
     std::vector<float> values_in_each_quadrant[Quadrant::NQ];
 
-    // Map value for the (u, v, w) coordinates
+    // Get the map value for (u, v, w)
     const float m_central = get_value(u, v, w);
 
-    // Use the points around fp and append them into each quadrant
-    this->grid.use_points_around(fp, r_max,
-        [&](const float& m, const double& d2, const Position& dp)
-        {
-            // Obtain the byte that will represent the quadrant
-            const byte bw = (dp.z >= 0.0) ? 0b100 : 0b000;
-            const byte bv = (dp.y >= 0.0) ? 0b010 : 0b000;
-            const byte bu = (dp.x >= 0.0) ? 0b001 : 0b000;
+    // Iterate for all points in the table
+    for (auto& p : table_of_indices) {
 
-            // Append the map value to the corresponding quadrant
-            values_in_each_quadrant[(bw | bv | bu)].push_back(m);
-        }
-    );
+        // Obtain the right quadrant for the current point
+        const byte bw = (p.w >= 0) ? 0b100 : 0b000;
+        const byte bv = (p.v >= 0) ? 0b010 : 0b000;
+        const byte bu = (p.u >= 0) ? 0b001 : 0b000;
+
+        // Append the map value to the corresponding quadrant
+        values_in_each_quadrant[(bw | bv | bu)].push_back(
+            get_value(p.u + u, p.v + v, p.w + w)
+        );
+    }
 
     return construct_quadrant(values_in_each_quadrant, m_central);
 }
 
+// Obtain a table containing the nearest indices in the lattice
+std::vector<gemmi::GridBase<float>::Point> Map::table_of_near_indices(const double& r)
+{
+    // Vector that will contain all the nearest indices
+    std::vector<gemmi::GridBase<float>::Point> table;
+
+    grid.use_points_around(Fractional(0, 0, 0), r,
+        [this, &table](const float& m, const double& d2, const Position& dp)
+        {
+            // Get the nearest point from the position
+            table.push_back(grid.get_nearest_point(dp));
+        }
+    );
+
+    return table;
+}
+
+// Precalculate all quadrants in the map
+vec_q* Map::table_of_quadrants(const double& r)
+{
+    // First, precalculate the table of near indices
+    const auto table_of_indices = table_of_near_indices(r);
+
+    // Allocate memory for all the quadrants in the grid
+    vec_q* table_q = new vec_q[get_volume()]; 
+
+    // Count the corresponding quadrant for each point
+    int q = 0;
+
+    // Iterate for each point in the grid to obtain its quadrant
+    for (int w = 0; w < this->Nw; w++) {
+        for (int v = 0; v < this->Nv; v++) {
+            for (int u = 0; u < this->Nu; u++) {
+
+                // Append the quadrant to the table
+                table_q[q] = get_quadrants(u, v, w, table_of_indices);
+
+                // Move to the next point in the grid
+                q++;
+
+            }
+        }
+    }
+
+    return table_q;
+}
+
+
 // Non local means denoiser
-Map Map::nlmeans_denoise(
-    const float& h2, const double& search_r, const double& comp_r
-) {
+Map Map::nlmeans_denoise(const float& h2, const double& r_comp) 
+{
     // Generate a copy of the current map
     Map denoised_map = *this;
+
+    // Generate a table containing all the quadrants
+    vec_q* table_q = table_of_quadrants(r_comp);
 
     // Iterate for each value in the grid
     for (int wr = 0; wr < this->Nw; wr++) {
     for (int vr = 0; vr < this->Nv; vr++) {
     for (int ur = 0; ur < this->Nu; ur++) {
 
-        // Obtain the quadrant vector around (ur, vr, wr)
-        const vec_q refr_q = get_quadrants(ur, vr, wr, comp_r);
-
-        // Obtain the Fractional coordinates of (ur, vr, wr)
-        const Fractional refr_F = get_fractional(ur, vr, wr);
-
-        // Obtain the real space coordinates of (ur, vr, wr)
-        const Position refr_P = get_position(ur, vr, wr);
+        // Obtain the linear index in the grid for (ur, vr, wr)
+        const auto ir = size_t(wr * Nv + vr) * Nu + ur;
 
         // New denoised value of the map at (ur, vr, wr)
         float m_hat = 0.0f;
@@ -90,54 +159,41 @@ Map Map::nlmeans_denoise(
         // Maximum value of the kernel and normalisation constant
         float max_kernel = -1.0f, sum_kernels = 0.0f;
 
-        // Process all points around (ur, vr, wr) with distance search_r
-        this->grid.use_points_around(refr_F, search_r,
-            [&](const float& m, const double& d2, const Position& dp)
-            {
-                // Obtain the closes point (uc, vc, wc)
-                const auto comp_p = this->grid.get_nearest_point(
-                    refr_P + dp
-                );
+        // Iterate for all other comparison environments in the grid
+        for (int wc = 0; wc < this->Nw; wc++) {
+        for (int vc = 0; vc < this->Nv; vc++) {
+        for (int uc = 0; uc < this->Nu; uc++) {
 
-                // References to the (uc, vc, wc) coordinates
-                const int& uc = comp_p.u;
-                const int& vc = comp_p.v;
-                const int& wc = comp_p.w;
+            // Obtain the linear index in the grid for (uc, vc, wc)
+            const auto ic = size_t(wc * Nv + vc) * Nu + uc;
 
-                // Obtain the average quadrants for this position
-                const vec_q comp_q = get_quadrants(uc, vc, wc, comp_r);
+            // Compare the two quadrants
+            const float min_dsq = Quadrant::compare_quadrants(
+                table_q[ir], table_q[ic]
+            );
 
-                // Compare reference and comparision quadrants
-                const float min_dsq = Quadrant::compare_quadrants(
-                    refr_q, comp_q
-                );
+            // Using the distance, obtain the denoising kernel
+            const float kernel = std::exp(- min_dsq / h2);
 
-                // Using the distance, obtain the denoising kernel
-                const float kernel = std::exp(- min_dsq / h2);
+            // Update the maximum kernel value
+            max_kernel = std::max(max_kernel, kernel);
 
-                // Update the maximum kernel value
-                max_kernel = std::max(max_kernel, kernel);
+            // Update the denoised value
+            m_hat += kernel * grid.data[ic];
 
-                // Update the denoised value
-                m_hat += kernel * m;
+            // Append the kernel to the normalising constant
+            sum_kernels += kernel;
 
-                // Append the kernel to the normalising constant
-                sum_kernels += kernel;
-            }
-        );
+        } // -- End of the main comparison uc iteration
+        } // -- End of the main comparison vc iteration
+        } // -- End of the main comparison wc iteration
 
-        // Update the denoised value with the central pixel
-        m_hat += max_kernel * get_value(ur, vr, wr);
-
-        // Add the central kernel to the normalising constant
-        sum_kernels += max_kernel;
-
-        // Change the pixel value
+        // Change the pixel value with the denoised version
         denoised_map.set_value(ur, vr, wr, m_hat / sum_kernels);
 
-    } // End of the main ur iteration
-    } // End of the main vr iteration
-    } // End of the main wr iteration
+    } // -- End of the main reference ur iteration
+    } // -- End of the main reference vr iteration
+    } // -- End of the main reference wr iteration
 
     return denoised_map;
 }

@@ -18,8 +18,7 @@ int main(const int argc, const char** argv)
     // Added sigma noise to the map
     const float sigma    = std::stof(argv[3]);
     const float h2       = std::stof(argv[4]);
-    const float r_search = std::stof(argv[5]);
-    const float r_comp   = std::stof(argv[6]);
+    const float r_comp   = std::stof(argv[5]);
 
     // Generate the path to the protein location
     const auto map_location = Path::join_path(
@@ -31,8 +30,8 @@ int main(const int argc, const char** argv)
 
     // Generate the folder to save the data to
     const auto out_path = Path::format_str(
-        "%s/maps/s%.4f_h%.4f_rs%.4f_rc%.4f",
-        protein_path, sigma, h2, r_search, r_comp
+        "%s/maps/s%.4f_h%.4f_r%.4f",
+        protein_path, sigma, h2, r_comp
     );
 
     // Create the output path if needed
@@ -42,7 +41,7 @@ int main(const int argc, const char** argv)
     map.add_noise(sigma);
 
     // Denoise the map using non-local means
-    Map denoised = map.nlmeans_denoise(h2, r_search, r_comp);
+    Map denoised = map.nlmeans_denoise(h2, r_comp);
 
     // Save the noisy map in memory
     map.save_map(

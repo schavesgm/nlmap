@@ -66,8 +66,17 @@ struct Map : public gemmi::Ccp4<float>
     float add_noise(const float& = 1.0, const bool& = false);
 
     // -- Denoiser methods
-    vec_q get_quadrants(const int&, const int&, const int&, const double&);
-    Map nlmeans_denoise(const float&, const double&, const double&);
+    Map nlmeans_denoise(const float&, const double&);
+
+    // Table containing the nearest indices in the lattice
+    std::vector<gemmi::GridBase<float>::Point> table_of_near_indices(const double&);
+
+    // Precalculate all quadrants in the lattice
+    vec_q* table_of_quadrants(const double&);
+
+    // Get all quadrants around a given point in the grid
+    vec_q get_quadrants(const int&, const int&, const int&, const std::vector<gemmi::GridBase<float>::Point>&);
+
 
     // -- Save the current status of the map into a file
     void save_map(const std::string&);
