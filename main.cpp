@@ -21,17 +21,14 @@ int main(const int argc, const char** argv)
     const float r_comp   = std::stof(argv[5]);
 
     // Generate the path to the protein location
-    const auto map_location = Path::join_path(
-        protein_path, map_path
-    );
+    const auto map_location = Path::join_path(protein_path, map_path);
 
     // Load a Map file from memory
     Map map(map_location);
 
     // Generate the folder to save the data to
     const auto out_path = Path::format_str(
-        "%s/maps/s%.4f_h%.4f_r%.4f",
-        protein_path, sigma, h2, r_comp
+        "%s/maps/s%.4f_h%.4f_r%.4f", protein_path, sigma, h2, r_comp
     );
 
     // Create the output path if needed

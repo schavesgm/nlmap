@@ -17,11 +17,10 @@ source ${BASE_PATH}/scripts/shell/checks.sh
 assert_var_exists "CCP4_PATH" ${CCP4_PATH}
 
 # -- Set some needed variables for the simulation
-PROTEIN=${1};               # assert_var_exists "protein"   ${1}
-SIGMA=$(printf %.4f ${2});  # assert_var_exists "noise_std" ${2}
-HSQRT=$(printf %.4f ${3});  # assert_var_exists "h_square"  ${3}
-RSRCH=$(printf %.4f ${4});  # assert_var_exists "r_search"  ${4}
-RCOMP=$(printf %.4f ${5});  # assert_var_exists "r_compar"  ${5}
+PROTEIN=${1};               assert_var_exists "protein"   ${1}
+SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
+HSQRT=$(printf %.4f ${3});  assert_var_exists "h_square"  ${3}
+RCOMP=$(printf %.4f ${4});  assert_var_exists "r_compar"  ${4}
 
 # -- Directories to the scripts
 MAKE_MAP="${BASE_PATH}/scripts/shell/make_map.sh"
@@ -39,7 +38,7 @@ assert_dir_exists "${DATA_PATH}"
 assert_dir_exists "${PROT_PATH}"
 
 # -- Specific name of the simulation name
-SIM_NAME="s${SIGMA}_h${HSQRT}_rs${RSRCH}_rc${RCOMP}"
+SIM_NAME="s${SIGMA}_h${HSQRT}_r${RCOMP}"
  
 # -- Create some directories if not present
 mkdir -p ${DATA_PATH}/${PROTEIN}/maps
@@ -49,7 +48,6 @@ header_message "Path to CCP4 software is ${CCP4_PATH}"
 header_message "Protein selected: ${PROTEIN}"
 header_message "Standard deviation of added noise: ${SIGMA}"
 header_message "Denoising parameter squared: ${HSQRT}"
-header_message "Radious of search: ${RSRCH} (A)"
 header_message "Radious of comparison: ${RCOMP} (A)"
 
 # -- Create a .map file from the .mtz file
@@ -66,7 +64,7 @@ ${BUILD_MAP} refmac.map ${PROT_PATH} refmap
   
 # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
-${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HSQRT} ${RSRCH} ${RCOMP}
+${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HSQRT} ${RCOMP}
  
 # -- Build a model for each processed map file
 for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do

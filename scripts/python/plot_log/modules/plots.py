@@ -45,7 +45,8 @@ def plot_parameters(log_path, show = False):
     # Set some important properties of the axis
     axis_Rw.set_xlabel('cycle');   axis_Rf.set_xlabel('cycle')
     axis_Rw.set_ylabel('Rw');      axis_Rf.set_ylabel('Rf')
-    axis_Rw.grid(True, '#ffffff'); axis_Rf.grid(True, '#cccccc')
+    axis_Rw.grid(True, color = '#cccccc'); 
+    axis_Rf.grid(True, color = '#cccccc')
     
     # Set the title in the plot
     title = '{} ({} -- {}).  s = {}, h^2 = {}, r = {} (A)'
