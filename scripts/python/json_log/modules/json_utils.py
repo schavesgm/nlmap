@@ -9,7 +9,7 @@ from .parse_utils import parse_map
 __all__ = ['pipeline_JSON']
 
 # Simulation name string format
-SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_rs(\d+.\d+)_rc(\d+.\d+)'
+SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)'
 
 # Custom JSON encoder and container to serialise data {{{
 class InlineList:
@@ -32,17 +32,6 @@ class CustomEncoder(json.JSONEncoder):
 # }}}
 
 # Dump the reference mtz and the map files content {{{
-def key_to_string(key):
-    ''' Transform a given key to a string for readability. '''
-    if key == 's':
-        return 'noise_std'
-    elif key == 'h':
-        return 'denoise_param_square'
-    elif key == 'b':
-        return 'big_vol_extent'
-    elif key == 'v':
-        return 'small_vol_extent'
-
 def dump_refmtz(refmtz_content):
     ''' Dump the contents of the reftmtz build. '''
     return {
@@ -165,8 +154,7 @@ def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
         'resolution'    : refmtz['resrange'],
         'noise_std'     : float(matches.group(1)),
         'denoise_hsqrt' : float(matches.group(2)),
-        'r_search'      : float(matches.group(3)),
-        'r_comparison'  : float(matches.group(4)),
+        'r_comparison'  : float(matches.group(3)),
         'builds' : {
             'refmtz' : dump_refmtz(refmtz),
             'refmap' : dump_map(refmap),

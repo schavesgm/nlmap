@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from modules import Histomap
 
 # Simulation name string format
-SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_rs(\d+.\d+)_rc(\d+.\d+)'
+SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)'
 
 if __name__ == '__main__':
 
@@ -50,9 +50,8 @@ if __name__ == '__main__':
     
     # Add the simulation name as supertitle
     fig.suptitle(
-        's = {}, h^2 = {}, rs = {} (A), rc = {} (A)'.format(
-            matches.group(1), matches.group(2),
-            matches.group(3), matches.group(4)
+        's = {}, h^2 = {}, r = {} (A)'.format(
+            matches.group(1), matches.group(2), matches.group(3)
         ), y = 0.95
     )
 

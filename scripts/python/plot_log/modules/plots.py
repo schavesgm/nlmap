@@ -33,7 +33,6 @@ def plot_parameters(log_path, show = False):
     resolution   = json_dict['resolution']
     noise_std    = json_dict['noise_std']
     h_sqrt_den   = json_dict['denoise_hsqrt']
-    r_search     = json_dict['r_search']
     r_comparison = json_dict['r_comparison']
 
     # Generate a figure to plot the data into it
@@ -49,10 +48,10 @@ def plot_parameters(log_path, show = False):
     axis_Rw.grid(True, '#ffffff'); axis_Rf.grid(True, '#cccccc')
     
     # Set the title in the plot
-    title = '{} ({} -- {}).  s = {}, h^2 = {}, rs = {} (A), rc = {} (A)'
+    title = '{} ({} -- {}).  s = {}, h^2 = {}, r = {} (A)'
     fig.suptitle(title.format(
         protein, spc_grp, resolution, noise_std, 
-        h_sqrt_den, r_search, r_comparison
+        h_sqrt_den, r_comparison
         )
     )
 
@@ -113,17 +112,16 @@ def plot_residues(log_path, show = False):
     resolution   = json_dict['resolution']
     noise_std    = json_dict['noise_std']
     h_sqrt_den   = json_dict['denoise_hsqrt']
-    r_search     = json_dict['r_search']
     r_comparison = json_dict['r_comparison']
 
     # Generate a figure to hold the data
     fig = plt.figure(figsize = (14, 10))
 
     # Set the title in the plot
-    title = '{} ({} -- {}).  s = {}, h^2 = {}, rs = {} (A), rc = {} (A)'
+    title = '{} ({} -- {}).  s = {}, h^2 = {}, r = {} (A)'
     fig.suptitle(title.format(
         protein, spc_grp, resolution, noise_std, 
-        h_sqrt_den, r_search, r_comparison
+        h_sqrt_den, r_comparison
         )
     )
 
