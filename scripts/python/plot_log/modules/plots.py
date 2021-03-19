@@ -1,6 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as ml
+import numpy as np
 import os
 
 # User defined modules
@@ -12,26 +11,8 @@ __all__ = ['plot_parameters', 'plot_residues']
 COLORS = ['#49443d', '#c1a188', '#0073e5', '#7ddc1f']
 MARKER = ['+', 'x', '*', 'd']
 
-def check_font_exists(font_name):
-    ''' Check if a font exists in matplotlib. '''
-    import matplotlib.font_manager as fm
-
-    # Get all fonts available
-    fonts = fm.findSystemFonts(fontpaths=None, fontext='ttf')
-
-    # Loop over the fonts and find any ocurrence
-    for font in fonts:
-        if font_name in font:
-            return True
-
-    return False
-
 # -- Set some matplotlib's parameters
-ml.rcParams['mathtext.fontset'] = 'cm'
-ml.rcParams['font.size'] = 12
-
-if check_font_exists('iosevka-slab'): 
-    ml.rcParams['font.family'] = 'Iosevka Slab'
+plt.rcParams['font.size'] = 12
 
 # Plot the parameters from the log path for each build {{{
 def plot_parameters(log_path, show = False):
@@ -63,9 +44,9 @@ def plot_parameters(log_path, show = False):
     axis_Rf = fig.add_subplot(1, 2, 2)
 
     # Set some important properties of the axis
-    axis_Rw.set_xlabel('cycle'); axis_Rf.set_xlabel('cycle')
-    axis_Rw.set_ylabel('Rw');    axis_Rf.set_ylabel('Rf')
-    axis_Rw.grid('#ccc');        axis_Rf.grid('#ccc')
+    axis_Rw.set_xlabel('cycle');   axis_Rf.set_xlabel('cycle')
+    axis_Rw.set_ylabel('Rw');      axis_Rf.set_ylabel('Rf')
+    axis_Rw.grid(True, '#ffffff'); axis_Rf.grid(True, '#cccccc')
     
     # Set the title in the plot
     title = '{} ({} -- {}).  s = {}, h^2 = {}, rs = {} (A), rc = {} (A)'
@@ -166,11 +147,11 @@ def plot_residues(log_path, show = False):
     axis_comp_build.set_ylabel(r'Completeness by residues built')
     axis_comp_chain.set_ylabel(r'Completeness of chains')
 
-    axis_residues.grid(color = '#ccc')
-    axis_prunning.grid(color = '#ccc')
-    axis_chains.grid(color = '#ccc')
-    axis_comp_build.grid(color = '#ccc')
-    axis_comp_chain.grid(color = '#ccc')
+    axis_residues.grid(True, color = '#cccccc')
+    axis_prunning.grid(True, color = '#cccccc')
+    axis_chains.grid(True, color = '#cccccc')
+    axis_comp_build.grid(True, color = '#cccccc')
+    axis_comp_chain.grid(True, color = '#cccccc')
 
     # Iterate through all builds in the log file
     for b, (key, items) in enumerate(json_dict['builds'].items()):

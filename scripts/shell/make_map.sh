@@ -2,7 +2,7 @@
 # -- Create a .map file from a .mtz file
 
 # -- Source the needed setup
-source ${CCP4PATH}/bin/ccp4.setup-sh
+source ${CCP4_PATH}/bin/ccp4.setup-sh
 
 # -- Source some checks functions
 source ${BASE_PATH}/scripts/shell/checks.sh

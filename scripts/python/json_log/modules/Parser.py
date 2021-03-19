@@ -68,10 +68,10 @@ class Parser:
 
     # Representation methods {{{
     def __str__(self):
-        return f'<Parser: {self.name}>'
+        return '<Parser: {}>'.format(self.name)
 
     def __repr__(self):
-        return f'<Parser: {self.name}>'
+        return '<Parser: {}>'.format(self.name)
     # }}}
 
 if __name__ == '__main__':

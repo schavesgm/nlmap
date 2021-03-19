@@ -189,7 +189,7 @@ def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
         json_out['builds'][key] = dump_map(content)
 
     # Path to the output file
-    OUT_PATH = os.path.join(out_dir, f'{protein}_log.json')
+    OUT_PATH = os.path.join(out_dir, '{}_log.json'.format(protein))
 
     # Dump the JSON file into a dictionary
     with open(OUT_PATH, 'w') as f:

@@ -2,7 +2,7 @@
 # -- Build a model from a .map file
 
 # -- Source the configuration of CCP4
-source ${CCP4PATH}/bin/ccp4.setup-sh
+source ${CCP4_PATH}/bin/ccp4.setup-sh
 
 # -- Source some check functions
 source ${BASE_PATH}/scripts/shell/checks.sh
@@ -61,10 +61,10 @@ END
 eof
 
 # -- Start buccaneer to process the data
-ccp4-python -u ${CCP4PATH}/bin/buccaneer_pipeline -stdin > ${BUC_LOG} <<eof
+ccp4-python -u ${CCP4_PATH}/bin/buccaneer_pipeline -stdin > ${BUC_LOG} <<eof
 title ${MAP_FILE} build
-pdbin-ref ${CCP4PATH}/lib/data/reference_structures/reference-1tqw.pdb
-mtzin-ref ${CCP4PATH}/lib/data/reference_structures/reference-1tqw.mtz
+pdbin-ref ${CCP4_PATH}/lib/data/reference_structures/reference-1tqw.pdb
+mtzin-ref ${CCP4_PATH}/lib/data/reference_structures/reference-1tqw.mtz
 colin-ref-fo [/*/*/FP.F_sigF.F,/*/*/FP.F_sigF.sigF]
 colin-ref-hl [/*/*/FC.ABCD.A,/*/*/FC.ABCD.B,/*/*/FC.ABCD.C,/*/*/FC.ABCD.D]
 seqin ${PROT_PATH}/sequence.seq
@@ -87,5 +87,3 @@ buccaneer-keyword mr-model-filter-sigma 3
 jobs 2
 prefix ./buccaneer_pipeline/
 eof
-
-#pdbin-mr ../data/refmac.pdb

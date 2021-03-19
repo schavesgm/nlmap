@@ -2,24 +2,14 @@
 
 import os, sys, regex
 import matplotlib as mpl
+
+# Set the backend engine
+mpl.use('pdf')
+
 import matplotlib.pyplot as plt
 
 # User defined modules
 from modules import Histomap
-
-def check_font_exists(font_name):
-    ''' Check if a font exists in matplotlib. '''
-    import matplotlib.font_manager as fm
-
-    # Get all fonts available
-    fonts = fm.findSystemFonts(fontpaths=None, fontext='ttf')
-
-    # Loop over the fonts and find any ocurrence
-    for font in fonts:
-        if font_name in font:
-            return True
-
-    return False
 
 # Simulation name string format
 SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_rs(\d+.\d+)_rc(\d+.\d+)'
@@ -27,11 +17,7 @@ SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_rs(\d+.\d+)_rc(\d+.\d+)'
 if __name__ == '__main__':
 
     # -- Set some matplotlib's parameters
-    mpl.rcParams['mathtext.fontset'] = 'cm'
     mpl.rcParams['font.size'] = 12
-    
-    if check_font_exists('iosevka-slab'): 
-        mpl.rcParams['font.family'] = 'Iosevka Slab'
 
     # Name of the current simulation
     sim_name = sys.argv[1]
@@ -82,7 +68,7 @@ if __name__ == '__main__':
         # Add some properties to the axis
         axis.set_xlabel('Map value')
         axis.set_ylabel('Density')
-        axis.grid('#ccc')
+        axis.grid(True, color = '#cccccc')
         axis.set_facecolor('#f9f9fe')
     
         # Set the title of the axis
@@ -90,7 +76,7 @@ if __name__ == '__main__':
     
         # Histogram the data into the axis
         histomap.histogram(
-            axis, 100, color = '#407294', density = True, alpha = 0.8
+            axis, 100, color = '#407294', alpha = 0.8
         )
 
     # Increase distance between subplots
@@ -99,4 +85,4 @@ if __name__ == '__main__':
         wspace = 0.25, hspace = 0.2,
     )
 
-    plt.savefig(os.path.join(out_path, 'histogram.pdf'))
+    plt.savefig(os.path.join(out_path, 'histogram'))

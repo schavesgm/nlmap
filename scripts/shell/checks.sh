@@ -3,12 +3,19 @@
 # -- Generate the error message
 function error_message()
 {
-    echo "    ERROR: ${1}"; exit 1
+    >&2 echo "    ERROR: ${1}"; exit 1
 }
 
+# -- Print some information into the console
 function info_message()
 {
-    echo "    -- ${1}";
+    echo "    -- ${1}"
+}
+
+# -- Prit some main information into the console
+function header_message()
+{
+    echo " ** [" ${1} "]"
 }
 
 # -- Assert variable is set
