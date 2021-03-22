@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <random>
 #include <cmath>
+#include <numeric>
 
 // Include gemmi libraries
 #include <gemmi/ccp4.hpp>
@@ -73,6 +74,7 @@ struct Map : public gemmi::Ccp4<float>
 
     // Precalculate all quadrants in the lattice
     vec_q* table_of_quadrants(const double&);
+    float* table_of_avg_quadrants(const vec_q*);
 
     // Get all quadrants around a given point in the grid
     vec_q get_quadrants(const int&, const int&, const int&, const std::vector<gemmi::GridBase<float>::Point>&);
