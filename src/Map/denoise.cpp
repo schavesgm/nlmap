@@ -1,5 +1,4 @@
 #include <Map.hpp>
-#include <iostream>
 
 // Construct the average of all points in a quadrant
 vec_q construct_quadrant(const std::vector<float>* vals_in_quad, const float& m_central) 
@@ -115,8 +114,7 @@ vec_q* Map::table_of_quadrants(const double& r)
     vec_q* table_q = new vec_q[get_volume()]; 
 
     // Count the corresponding quadrant for each point
-    int q = 0;
-
+    int q = 0; 
     // Iterate for each point in the grid to obtain its quadrant
     for (int w = 0; w < this->Nw; w++) {
         for (int v = 0; v < this->Nv; v++) {
@@ -158,8 +156,8 @@ Map Map::nlmeans_denoise(const float& h2, const double& r_comp)
     // Generate a copy of the current map
     Map denoised_map = *this;
 
-    // Minimum value avilable for the prefilter
-    const float log_eps = std::log(0.5);
+    // Square root of h2, that is, h
+    const float h = std::sqrt(h2);
 
     // Generate a table containing all the quadrants
     const vec_q* table_q = table_of_quadrants(r_comp);
@@ -181,9 +179,6 @@ Map Map::nlmeans_denoise(const float& h2, const double& r_comp)
         // Maximum value of the kernel and normalisation constant
         float max_kernel = -1.0f, sum_kernels = 0.0f;
 
-        // Number of environments acting on the data
-        int counter = 0;
-
         // Iterate for all other comparison environments in the grid
         for (int wc = 0; wc < this->Nw; wc++) {
         for (int vc = 0; vc < this->Nv; vc++) {
@@ -193,10 +188,10 @@ Map Map::nlmeans_denoise(const float& h2, const double& r_comp)
             const auto ic = size_t(wc * Nv + vc) * Nu + uc;
 
             // Calculate the argument of the filter
-            const float filt_arg = (table_avg[ir] - table_avg[ic]) / h2;
+            const float filt_arg = (table_avg[ir] - table_avg[ic]);
 
             // Prefilter the data using a prefilter on the averages
-            if (- (filt_arg * filt_arg) < log_eps) {
+            if (std::abs(filt_arg) < 1.25 * h) {
 
                 // Compare the two quadrants
                 const float min_dsq = Quadrant::compare_quadrants(
@@ -204,7 +199,7 @@ Map Map::nlmeans_denoise(const float& h2, const double& r_comp)
                 );
 
                 // Using the distance, obtain the denoising kernel
-                const float kernel = std::exp(- min_dsq / h2);
+                const float kernel = std::exp(- min_dsq / (2 * h2));
 
                 // Update the maximum kernel value
                 max_kernel = std::max(max_kernel, kernel);
