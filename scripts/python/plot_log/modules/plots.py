@@ -32,7 +32,8 @@ def plot_parameters(log_path, show = False):
     spc_grp      = json_dict['space_group']
     resolution   = json_dict['resolution']
     noise_std    = json_dict['noise_std']
-    h_sqrt_den   = json_dict['denoise_hsqrt']
+    h_denoise    = json_dict['h_denoise']
+    h_proportion = json_dict['h_proportion']
     r_comparison = json_dict['r_comparison']
 
     # Generate a figure to plot the data into it
@@ -47,15 +48,15 @@ def plot_parameters(log_path, show = False):
     axis_Rw.set_ylabel('Rw');      axis_Rf.set_ylabel('Rf')
     axis_Rw.grid(True, color = '#cccccc'); 
     axis_Rf.grid(True, color = '#cccccc')
-    
+
     # Set the title in the plot
-    title = '{} ({} -- {}).  s = {}, h^2 = {}, r = {} (A)'
+    title = '{} ({} -- {}).  s = {}, h = {}, p = {}, r = {} (A)'
     fig.suptitle(title.format(
-        protein, spc_grp, resolution, noise_std, 
-        h_sqrt_den, r_comparison
+        protein, spc_grp, resolution, noise_std,
+        h_denoise, h_proportion, r_comparison
         )
     )
-
+    
     # Iterate through all possible builds in the log
     for b, (key, items) in enumerate(json_dict['builds'].items()):
 
@@ -112,17 +113,18 @@ def plot_residues(log_path, show = False):
     spc_grp      = json_dict['space_group']
     resolution   = json_dict['resolution']
     noise_std    = json_dict['noise_std']
-    h_sqrt_den   = json_dict['denoise_hsqrt']
+    h_denoise    = json_dict['h_denoise']
+    h_proportion = json_dict['h_proportion']
     r_comparison = json_dict['r_comparison']
 
     # Generate a figure to hold the data
     fig = plt.figure(figsize = (14, 10))
 
     # Set the title in the plot
-    title = '{} ({} -- {}).  s = {}, h^2 = {}, r = {} (A)'
+    title = '{} ({} -- {}).  s = {}, h = {}, p = {}, r = {} (A)'
     fig.suptitle(title.format(
-        protein, spc_grp, resolution, noise_std, 
-        h_sqrt_den, r_comparison
+        protein, spc_grp, resolution, noise_std,
+        h_denoise, h_proportion, r_comparison
         )
     )
 
