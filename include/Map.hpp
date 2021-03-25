@@ -7,6 +7,7 @@
 #include <random>
 #include <cmath>
 #include <numeric>
+#include <fstream>
 
 // Include gemmi libraries
 #include <gemmi/ccp4.hpp>
@@ -19,13 +20,12 @@ using namespace gemmi;
 
 struct Map : public gemmi::Ccp4<float>
 {
-    // Constructors and destructors
+    // -- Constructors and destructors
     Map()  = default; ~Map() = default;
     Map(const std::string&, const float& = 0.0f);
     Map(const Map&);
     void operator=(const Map&);
 
-    // -- Inmutable properties of the map {{{
     // -- Dimensions of the grid
     const int get_Nu() const;
     const int get_Nv() const;
@@ -45,18 +45,15 @@ struct Map : public gemmi::Ccp4<float>
     float min_value() const;
     float avg_value() const;
 
-    // -- Real space coordinate treatment {{{
+    // -- Real space coordinate treatment
     Position get_position(const int&, const int&, const int&) const;
     Fractional get_fractional(const int&, const int&, const int&) const;
-    // }}}
 
-    // -- Accessors to the data in the grid {{{
+    // -- Accessors to the data in the grid
     float get_value(const int&, const int&, const int&) const;
     float& get_value(const int&, const int&, const int&);
-
     float operator[](const int&) const;
     float& operator[](const int&);
-    // }}}
 
     // -- Setters for the data in the grid
     void set_value(const int&, const int&, const int&, const float&);
@@ -79,8 +76,9 @@ struct Map : public gemmi::Ccp4<float>
     // Get all quadrants around a given point in the grid
     vec_q get_quadrants(const int&, const int&, const int&, const std::vector<gemmi::GridBase<float>::Point>&);
 
-    // -- Save the current status of the map into a file
+    // Generate the file of averages
     void save_map(const std::string&);
+    void save_table_of_avg(const std::string&, const double&);
 
     // -- Fields of the class {{{ 
     const int& Nu = grid.nu; 
@@ -97,5 +95,4 @@ struct Map : public gemmi::Ccp4<float>
     // Field containing the h_value for the denoiser
     float hd = 0.0f;
     // -- }}}
-
 };

@@ -140,6 +140,7 @@ def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
 
     # Obtain all the other directories in the folder
     other_maps = os.listdir(os.path.join(path_out_protein, simulation_name))
+    other_maps = [f for f in other_maps if f.endswith('.map')]
     other_maps = sorted(other_maps, key = str.lower)
 
     # Save the protein name after assertions
