@@ -19,7 +19,7 @@ assert_var_exists "CCP4_PATH" ${CCP4_PATH}
 # -- Set some needed variables for the simulation
 PROTEIN=${1};               assert_var_exists "protein"   ${1}
 SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
-HSQRT=$(printf %.4f ${3});  assert_var_exists "h_square"  ${3}
+HPERC=$(printf %.4f ${3});  assert_var_exists "h_perc"    ${3}
 RCOMP=$(printf %.4f ${4});  assert_var_exists "r_compar"  ${4}
 
 # -- Directories to the scripts
@@ -37,9 +37,6 @@ DATA_PATH="$(pwd)/data"; PROT_PATH="${DATA_PATH}/${PROTEIN}"
 assert_dir_exists "${DATA_PATH}" 
 assert_dir_exists "${PROT_PATH}"
 
-# -- Specific name of the simulation name
-SIM_NAME="s${SIGMA}_h${HSQRT}_r${RCOMP}"
- 
 # -- Create some directories if not present
 mkdir -p ${DATA_PATH}/${PROTEIN}/maps
 
@@ -47,7 +44,7 @@ mkdir -p ${DATA_PATH}/${PROTEIN}/maps
 header_message "Path to CCP4 software is ${CCP4_PATH}"
 header_message "Protein selected: ${PROTEIN}"
 header_message "Standard deviation of added noise: ${SIGMA}"
-header_message "Denoising parameter squared: ${HSQRT}"
+header_message "Proportion used in denoising parameter: ${HPERC}"
 header_message "Radious of comparison: ${RCOMP} (A)"
 
 # -- Create a .map file from the .mtz file
@@ -64,7 +61,13 @@ ${BUILD_MAP} refmac.map ${PROT_PATH} refmap
   
 # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
-${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HSQRT} ${RCOMP}
+HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HPERC} ${RCOMP})
+
+# -- Restrict the denoiser to 4 digits
+HDEN=$(printf %.4f ${HDEN})
+
+# -- Specific name of the simulation name
+SIM_NAME="s${SIGMA}_h${HDEN}_r${RCOMP}_p${HPERC}"
  
 # -- Build a model for each processed map file
 for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
@@ -84,7 +87,7 @@ for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
     # Process the map with the correct script
     ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
 done
- 
+  
 # -- Obtain a log file from the protein data
 header_message "Creating a log file from the processed pipeline"
 python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
