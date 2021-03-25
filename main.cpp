@@ -36,7 +36,8 @@ int main(const int argc, const char** argv)
 
     // Generate the folder to save the data to
     const auto out_path = Path::format_str(
-        "%s/maps/s%.4f_h%.4f_r%.4f", protein_path, sigma, h, r_comp
+        "%s/maps/s%.4f_h%.4f_r%.4f_p%.4f", 
+        protein_path, sigma, h, r_comp, perc_t
     );
 
     // Create the output path if needed
@@ -51,6 +52,9 @@ int main(const int argc, const char** argv)
     denoised.save_map(
         Path::join_path(out_path, "denoised.map")
     );
+
+    // Output the value of h to capture it in the pipeline
+    std::cout << h << std::endl;
 
 return 0;
 }

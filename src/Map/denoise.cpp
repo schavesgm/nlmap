@@ -164,9 +164,8 @@ Map Map::nlmeans_denoise(const float& perc_threshold, const double& r_comp)
     const auto table_avg = table_of_avg_quadrants(table_q);
 
     // Get the maximum and minimum environment average
-    const auto [min, max] = std::minmax_element(
-        table_avg.begin(), table_avg.end()
-    );
+    const auto min = std::min_element(table_avg.begin(), table_avg.end());
+    const auto max = std::max_element(table_avg.begin(), table_avg.end());
 
     // Calculate the denoising parameter using the threshold provided
     const float hd = perc_threshold * (*max - *min);
@@ -193,30 +192,22 @@ Map Map::nlmeans_denoise(const float& perc_threshold, const double& r_comp)
             // Obtain the linear index in the grid for (uc, vc, wc)
             const auto ic = size_t(wc * Nv + vc) * Nu + uc;
 
-            // Calculate the argument of the filter
-            const float filt_arg = (table_avg[ir] - table_avg[ic]);
+            // Compare the two quadrants
+            const float min_dsq = Quadrant::compare_quadrants(
+                table_q[ir], table_q[ic]
+            );
 
-            // Prefilter the data using a prefilter on the averages
-            if (std::abs(filt_arg) < hd) {
+            // Using the distance, obtain the denoising kernel
+            const float kernel = std::exp(- min_dsq / (2 * hd * hd));
 
-                // Compare the two quadrants
-                const float min_dsq = Quadrant::compare_quadrants(
-                    table_q[ir], table_q[ic]
-                );
+            // Update the maximum kernel value
+            max_kernel = std::max(max_kernel, kernel);
 
-                // Using the distance, obtain the denoising kernel
-                const float kernel = std::exp(- min_dsq / (2 * hd * hd));
+            // Update the denoised value
+            m_hat += kernel * grid.data[ic];
 
-                // Update the maximum kernel value
-                max_kernel = std::max(max_kernel, kernel);
-
-                // Update the denoised value
-                m_hat += kernel * grid.data[ic];
-
-                // Append the kernel to the normalising constant
-                sum_kernels += kernel;
-
-            } // -- End of the prefilter
+            // Append the kernel to the normalising constant
+            sum_kernels += kernel;
 
         } // -- End of the main comparison uc iteration
         } // -- End of the main comparison vc iteration
@@ -229,7 +220,7 @@ Map Map::nlmeans_denoise(const float& perc_threshold, const double& r_comp)
     } // -- End of the main reference vr iteration
     } // -- End of the main reference wr iteration
 
-    // Set the denoising parameter used as field in denoised_map
+    // // Set the denoising parameter used as field in denoised_map
     denoised_map.hd = hd;
 
     // Delete the heap allocated data
