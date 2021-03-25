@@ -1,4 +1,6 @@
 #include <Map.hpp>
+#include <iostream>
+#include <fstream>
 
 // Construct the average of all points in a quadrant
 vec_q construct_quadrant(const std::vector<float>* vals_in_quad, const float& m_central) 
@@ -134,10 +136,10 @@ vec_q* Map::table_of_quadrants(const double& r)
 }
 
 // Calculate the average of all environments into a table
-float* Map::table_of_avg_quadrants(const vec_q* table_q)
+std::vector<float> Map::table_of_avg_quadrants(const vec_q* table_q)
 {
     // Heap allocate some memory for the averages
-    float* table_avg = new float[get_volume()]; 
+    std::vector<float> table_avg(get_volume());
 
     // Iterate for each point in the grid to obtain its quadrant
     for (int i = 0; i < get_volume(); i++) {
@@ -149,21 +151,25 @@ float* Map::table_of_avg_quadrants(const vec_q* table_q)
     return table_avg;
 }
 
-
 // Non local means denoiser
-Map Map::nlmeans_denoise(const float& h2, const double& r_comp) 
+Map Map::nlmeans_denoise(const float& perc_threshold, const double& r_comp) 
 {
     // Generate a copy of the current map
     Map denoised_map = *this;
-
-    // Square root of h2, that is, h
-    const float h = std::sqrt(h2);
 
     // Generate a table containing all the quadrants
     const vec_q* table_q = table_of_quadrants(r_comp);
 
     // Generate a table containing all averages quadrants
-    const float* table_avg = table_of_avg_quadrants(table_q);
+    const auto table_avg = table_of_avg_quadrants(table_q);
+
+    // Get the maximum and minimum environment average
+    const auto [min, max] = std::minmax_element(
+        table_avg.begin(), table_avg.end()
+    );
+
+    // Calculate the denoising parameter using the threshold provided
+    const float hd = perc_threshold * (*max - *min);
 
     // Iterate for each value in the grid
     for (int wr = 0; wr < this->Nw; wr++) {
@@ -191,7 +197,7 @@ Map Map::nlmeans_denoise(const float& h2, const double& r_comp)
             const float filt_arg = (table_avg[ir] - table_avg[ic]);
 
             // Prefilter the data using a prefilter on the averages
-            if (std::abs(filt_arg) < 1.25 * h) {
+            if (std::abs(filt_arg) < hd) {
 
                 // Compare the two quadrants
                 const float min_dsq = Quadrant::compare_quadrants(
@@ -199,7 +205,7 @@ Map Map::nlmeans_denoise(const float& h2, const double& r_comp)
                 );
 
                 // Using the distance, obtain the denoising kernel
-                const float kernel = std::exp(- min_dsq / (2 * h2));
+                const float kernel = std::exp(- min_dsq / (2 * hd * hd));
 
                 // Update the maximum kernel value
                 max_kernel = std::max(max_kernel, kernel);
@@ -223,9 +229,11 @@ Map Map::nlmeans_denoise(const float& h2, const double& r_comp)
     } // -- End of the main reference vr iteration
     } // -- End of the main reference wr iteration
 
+    // Set the denoising parameter used as field in denoised_map
+    denoised_map.hd = hd;
+
     // Delete the heap allocated data
     delete[] table_q;
-    delete[] table_avg;
 
     return denoised_map;
 }

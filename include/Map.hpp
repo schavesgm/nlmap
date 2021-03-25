@@ -74,11 +74,10 @@ struct Map : public gemmi::Ccp4<float>
 
     // Precalculate all quadrants in the lattice
     vec_q* table_of_quadrants(const double&);
-    float* table_of_avg_quadrants(const vec_q*);
+    std::vector<float> table_of_avg_quadrants(const vec_q*);
 
     // Get all quadrants around a given point in the grid
     vec_q get_quadrants(const int&, const int&, const int&, const std::vector<gemmi::GridBase<float>::Point>&);
-
 
     // -- Save the current status of the map into a file
     void save_map(const std::string&);
@@ -94,6 +93,9 @@ struct Map : public gemmi::Ccp4<float>
     const double& alpha = grid.unit_cell.alpha;
     const double& beta  = grid.unit_cell.beta;
     const double& gamma = grid.unit_cell.gamma;
+
+    // Field containing the h_value for the denoiser
+    float hd = 0.0f;
     // -- }}}
 
 };
