@@ -3,13 +3,16 @@ import regex
 import json
 import numpy
 
+# Needs OrderedDict for older python versions
+from collections import OrderedDict
+
 from .parse_utils import parse_refmtz
 from .parse_utils import parse_map
 
 __all__ = ['pipeline_JSON']
 
 # Simulation name string format
-SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)'
+SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)'
 
 # Custom JSON encoder and container to serialise data {{{
 class InlineList:
@@ -34,19 +37,18 @@ class CustomEncoder(json.JSONEncoder):
 # Dump the reference mtz and the map files content {{{
 def dump_refmtz(refmtz_content):
     ''' Dump the contents of the reftmtz build. '''
-    return {
-        'params'   : dump_params(refmtz_content['params']),
-        'residues' : dump_residues(refmtz_content['resids'])
-    }
+    return OrderedDict([
+        ('params'  , dump_params(refmtz_content['params'])),
+        ('residues', dump_residues(refmtz_content['resids']))
+    ])
 
 def dump_map(map_content):
     ''' Dump the contents of a map build. '''
-
-    return {
-        'params'   : dump_params(map_content['params']),
-        'residues' : dump_residues(map_content['resids']),
-        'sigma'    : dump_sigma(map_content['sigma'])
-    }
+    return OrderedDict([
+        ('params'  , dump_params(map_content['params'])),
+        ('residues', dump_residues(map_content['resids'])),
+        ('sigma'   , dump_sigma(map_content['sigma']))
+    ])
 # }}}
 
 # Functions to convert the content dictionaries to good format {{{
@@ -55,35 +57,35 @@ def param_split(key, result_obj):
     Generate a dictionary containing the initial and
     final parameters.
     '''
-    return {
-        'o': InlineList([getattr(p, key)[0] for p in result_obj]),
-        'f': InlineList([getattr(p, key)[1] for p in result_obj]),
-    }
+    return OrderedDict([
+        ('o', InlineList([getattr(p, key)[0] for p in result_obj])),
+        ('f', InlineList([getattr(p, key)[1] for p in result_obj])),
+    ])
 
 def dump_residues(residues_dict):
     '''
         Generate a dictionary containing the organised version
         of the residues data.
     '''
-    return {
-        'resb'       : InlineList([p.resb for p in residues_dict]),
-        'prunning'   : InlineList([p.prun[0] for p in residues_dict]),
-        'chains'     : InlineList([p.chain for p in residues_dict]),
-        'comp_build' : InlineList([p.cbuild[0] for p in residues_dict]),
-        'comp_chain' : InlineList([p.cchain[0] for p in residues_dict]),
-    }
+    return OrderedDict([
+        ('resb'      , InlineList([p.resb for p in residues_dict])),
+        ('prunning'  , InlineList([p.prun[0] for p in residues_dict])),
+        ('chains'    , InlineList([p.chain for p in residues_dict])),
+        ('comp_build', InlineList([p.cbuild[0] for p in residues_dict])),
+        ('comp_chain', InlineList([p.cchain[0] for p in residues_dict])),
+    ])
 
 def dump_params(params_dict):
     '''
         Generate a dictionary containing the parameter results.
     '''
-    return {
-        'Rw'    : param_split('Rw', params_dict),
-        'Rf'    : param_split('Rw', params_dict),
-        'rms_L' : param_split('L', params_dict),
-        'rms_A' : param_split('A', params_dict),
-        'rms_V' : param_split('A', params_dict),
-    }
+    return OrderedDict([
+        ('Rw'   , param_split('Rw', params_dict)),
+        ('Rf'   , param_split('Rw', params_dict)),
+        ('rms_L', param_split('L', params_dict)),
+        ('rms_A', param_split('A', params_dict)),
+        ('rms_V', param_split('A', params_dict)),
+    ])
 
 def dump_sigma(sigma_array):
     '''
@@ -91,7 +93,9 @@ def dump_sigma(sigma_array):
     '''
 
     # Dictionary containing the final results
-    results = {}
+    results = OrderedDict()
+
+    # Dump each value to the dictionary
     for row in sigma_array:
 
         # The key is a tuple of rmax, rmin
@@ -136,6 +140,7 @@ def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
 
     # Obtain all the other directories in the folder
     other_maps = os.listdir(os.path.join(path_out_protein, simulation_name))
+    other_maps = sorted(other_maps, key = str.lower)
 
     # Save the protein name after assertions
     protein = os.path.basename(path_out_protein)
@@ -148,18 +153,21 @@ def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
     refmap = parse_map(os.path.join(refmap_path, 'log'))
 
     # Dictionary containing the JSON output
-    json_out = {
-        'protein'       : protein,
-        'space_group'   : refmtz['spgroup'],
-        'resolution'    : refmtz['resrange'],
-        'noise_std'     : float(matches.group(1)),
-        'denoise_hsqrt' : float(matches.group(2)),
-        'r_comparison'  : float(matches.group(3)),
-        'builds' : {
-            'refmtz' : dump_refmtz(refmtz),
-            'refmap' : dump_map(refmap),
-        }
-    }
+    json_out = OrderedDict()
+    
+    # Add the data to the dictionary
+    json_out['protein']      = protein
+    json_out['space_group']  = refmtz['spgroup']
+    json_out['resolution']   = refmtz['resrange']
+    json_out['noise_std']    = float(matches.group(1))
+    json_out['h_denoise']    = float(matches.group(2))
+    json_out['r_comparison'] = float(matches.group(3))
+    json_out['h_proportion'] = float(matches.group(4))
+
+    # Add the builds to the dictionary
+    json_out['builds'] = OrderedDict()
+    json_out['builds']['refmtz'] = dump_refmtz(refmtz)
+    json_out['builds']['refmap'] = dump_map(refmap)
 
     # Add the other maps to the content reference
     for processed_map in other_maps:
