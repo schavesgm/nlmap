@@ -23,13 +23,13 @@ int main(const int argc, const char** argv)
     const auto map_location = Path::join_path(protein_path, map_path);
 
     // Load a Map file from memory
-    Map map(map_location);
+    Map original(map_location);
 
     // Add some noise to the map
-    map.add_noise(sigma);
+    original.add_noise(sigma);
 
     // Denoise the map using non-local means
-    Map denoised = map.nlmeans_denoise(perc_t, r_comp);
+    Map denoised = original.nlmeans_denoise(perc_t, r_comp);
 
     // Retrieve the denoise parameter
     const float h = denoised.hd;
@@ -44,13 +44,23 @@ int main(const int argc, const char** argv)
     mkdir(out_path.c_str(), 0777);
 
     // Save the noisy map in memory
-    map.save_map(
+    original.save_map(
         Path::join_path(out_path, "noisy.map")
     );
 
     // Save the denoised map in memory
     denoised.save_map(
         Path::join_path(out_path, "denoised.map")
+    );
+    
+    // Save the average for each environment in the noisy map
+    original.save_table_of_avg(
+        Path::join_path(out_path, "table_avg_noisy.dat"), r_comp
+    );
+
+    // Save the average for each environment in the denoised map
+    denoised.save_table_of_avg(
+        Path::join_path(out_path, "table_avg_denoised.dat"), r_comp
     );
 
     // Output the value of h to capture it in the pipeline
