@@ -1,6 +1,4 @@
 #include <Map.hpp>
-#include <iostream>
-#include <fstream>
 
 // Construct the average of all points in a quadrant
 vec_q construct_quadrant(const std::vector<float>* vals_in_quad, const float& m_central) 
