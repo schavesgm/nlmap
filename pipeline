@@ -72,7 +72,7 @@ HDEN=$(printf %.4f ${HDEN})
 SIM_NAME="s${SIGMA}_h${HDEN}_r${RCOMP}_p${HPERC}"
  
 # -- Build a model for each processed map file
-for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
+for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*.map); do
 
     # Basename of the file
     base=$(basename -- ${file})
