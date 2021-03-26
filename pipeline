@@ -6,6 +6,7 @@
 # -- build_from_map.sh map_file path_to_protein_data out_name
 # -- json_log.py path_to_out_protein
 # -- plot_histogram.py simulation_name path_to_protein_data path_to_out_log
+# -- plot_table_of_avg.py path_to_map simulation_name out_path
 
 # -- Obtain the base path where the code is located
 export BASE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
@@ -53,12 +54,12 @@ header_message "Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)"
 ${MAKE_MAP} ${PROT_PATH}
 
 # -- Build the reference model from the .mtz file
-# header_message "Building reference model from reference refmac.mtz"
-# ${BUILD_MTZ} ${PROT_PATH}
-#    
-# # -- Build the reference model from the .map file
-# header_message "Building reference model from reference refmac.map"
-# ${BUILD_MAP} refmac.map ${PROT_PATH} refmap
+header_message "Building reference model from reference refmac.mtz"
+${BUILD_MTZ} ${PROT_PATH}
+   
+# -- Build the reference model from the .map file
+header_message "Building reference model from reference refmac.map"
+${BUILD_MAP} refmac.map ${PROT_PATH} refmap
   
 # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
@@ -71,23 +72,23 @@ HDEN=$(printf %.4f ${HDEN})
 SIM_NAME="s${SIGMA}_h${HDEN}_r${RCOMP}_p${HPERC}"
  
 # -- Build a model for each processed map file
-# for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
-# 
-#     # Basename of the file
-#     base=$(basename -- ${file})
-# 
-#     # Echo some data to the console
-#     header_message "Building model from map file ${base}"
-# 
-#     # Location of the map file inside ${PROT_PATH}
-#     MAP_LOC=maps/${SIM_NAME}/${base}
-# 
-#     # Output folder inside ./out
-#     OUT_PATH=${SIM_NAME}/${base/.map/}
-# 
-#     # Process the map with the correct script
-#     ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
-# done
+for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*); do
+
+    # Basename of the file
+    base=$(basename -- ${file})
+
+    # Echo some data to the console
+    header_message "Building model from map file ${base}"
+
+    # Location of the map file inside ${PROT_PATH}
+    MAP_LOC=maps/${SIM_NAME}/${base}
+
+    # Output folder inside ./out
+    OUT_PATH=${SIM_NAME}/${base/.map/}
+
+    # Process the map with the correct script
+    ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
+done
   
 # -- Obtain a log file from the protein data
 header_message "Creating a log file from the processed pipeline"
