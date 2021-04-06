@@ -89,7 +89,7 @@ for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*.map); do
     # Process the map with the correct script
     ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
 done
-  
+
 # -- Obtain a log file from the protein data
 header_message "Creating a log file from the processed pipeline"
 python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}

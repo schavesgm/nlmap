@@ -56,12 +56,15 @@ def plot_parameters(log_path, show = False):
         h_denoise, h_proportion, r_comparison
         )
     )
-    
+
+    # Small hack for shitty python version
+    builds = ['refmtz', 'refmap', 'noisy', 'denoised']
+
     # Iterate through all possible builds in the log
-    for b, (key, items) in enumerate(json_dict['builds'].items()):
+    for b, build in enumerate(builds):
 
         # Obtain the parameters of the build
-        params = items['params']
+        params = json_dict['builds'][build]['params']
 
         # Obtain the needed parameters Rw and Rf
         Rw_data, Rf_data = params['Rw'], params['Rf']
@@ -71,11 +74,11 @@ def plot_parameters(log_path, show = False):
 
         # Plot the data into the axis
         axis_Rw.plot(
-            cycles, Rw_data['f'], '-', label = key, 
+            cycles, Rw_data['f'], '-', label = build, 
             color = COLORS[b], marker = MARKER[b]
         )
         axis_Rf.plot(
-            cycles, Rf_data['f'], '-', label = key, 
+            cycles, Rf_data['f'], '-', label = build, 
             color = COLORS[b], marker = MARKER[b]
         )
 
@@ -154,11 +157,14 @@ def plot_residues(log_path, show = False):
     axis_comp_build.grid(True, color = '#cccccc')
     axis_comp_chain.grid(True, color = '#cccccc')
 
-    # Iterate through all builds in the log file
-    for b, (key, items) in enumerate(json_dict['builds'].items()):
+    # Small hack for shitty python version
+    builds = ['refmtz', 'refmap', 'noisy', 'denoised']
+
+    # Iterate through all possible builds in the log
+    for b, build in enumerate(builds):
 
         # Obtain the residues of the build
-        residues = items['residues']
+        residues = json_dict['builds'][build]['residues']
 
         # Get the needed parameters inside residues
         resb       = residues['resb']
@@ -172,31 +178,31 @@ def plot_residues(log_path, show = False):
 
         # Plot the residues per iteration in the file
         axis_residues.plot(
-            cycles, [r[0] for r in resb], '-', label = key, 
+            cycles, [r[0] for r in resb], '-', label = build, 
             color = COLORS[b], marker = MARKER[b]
         )
 
         # Plot the prunning per cycle
         axis_prunning.plot(
-            cycles, prunning, '-', label = key, 
+            cycles, prunning, '-', label = build, 
             color = COLORS[b], marker = MARKER[b]
         )
 
         # Plot the chains per cycle
         axis_chains.plot(
-            cycles, [c[0] for c in chains], '-', label = key, 
+            cycles, [c[0] for c in chains], '-', label = build, 
             color = COLORS[b], marker = MARKER[b]
         )
 
         # Plot the completeness by residues per cycle
         axis_comp_build.plot(
-            cycles, comp_build, '-', label = key, 
+            cycles, comp_build, '-', label = build, 
             color = COLORS[b], marker = MARKER[b]
         )
 
         # Plot the completeness of chains per cycle
         axis_comp_chain.plot(
-            cycles, comp_chain, '-', label = key, 
+            cycles, comp_chain, '-', label = build, 
             color = COLORS[b], marker = MARKER[b]
         )
 

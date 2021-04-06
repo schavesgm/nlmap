@@ -180,7 +180,7 @@ Map Map::nlmeans_denoise(const float& perc_threshold, const double& r_comp)
         float m_hat = 0.0f;
 
         // Maximum value of the kernel and normalisation constant
-        float max_kernel = -1.0f, sum_kernels = 0.0f;
+        float sum_kernels = 0.0f;
 
         // Iterate for all other comparison environments in the grid
         for (int wc = 0; wc < this->Nw; wc++) {
