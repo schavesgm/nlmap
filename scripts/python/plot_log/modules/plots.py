@@ -37,7 +37,7 @@ def plot_parameters(log_path, show = False):
     r_comparison = json_dict['r_comparison']
 
     # Generate a figure to plot the data into it
-    fig = plt.figure(figsize = (10, 6))
+    fig = plt.figure(figsize = (14, 10))
 
     # Generate two axis for Rw and Rf
     axis_Rw = fig.add_subplot(1, 2, 1)
@@ -94,7 +94,7 @@ def plot_parameters(log_path, show = False):
 
     # Show the plot if wanted and save the data into a file
     if show: plt.show()
-    plt.savefig(os.path.join(log_path, 'comp.pdf'))
+    plt.savefig(os.path.join(log_path, 'comp.eps'))
 
 # }}}
 
@@ -224,7 +224,7 @@ def plot_residues(log_path, show = False):
 
     # Show the plot if wanted and save the data into a file
     if show: plt.show()
-    plt.savefig(os.path.join(log_path, 'residues.pdf'))
+    plt.savefig(os.path.join(log_path, 'residues.eps'))
 
 # }}}
 

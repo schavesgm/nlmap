@@ -1,11 +1,5 @@
 #!/bin/python3
-
 import os, sys, regex
-import matplotlib as mpl
-
-# Set the backend engine
-mpl.use('pdf')
-
 import matplotlib.pyplot as plt
 
 # User defined modules
@@ -15,9 +9,6 @@ from modules import Histomap
 SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)'
 
 if __name__ == '__main__':
-
-    # -- Set some matplotlib's parameters
-    mpl.rcParams['font.size'] = 12
 
     # Name of the current simulation
     sim_name = sys.argv[1]
@@ -43,7 +34,7 @@ if __name__ == '__main__':
     ]
     
     # Figure that will contain all the plots
-    fig = plt.figure(figsize = (12, 8))
+    fig = plt.figure(figsize = (14, 10))
 
     # Match the simulation data from the simulation name
     matches = regex.match(SIM_FORMAT, sim_name)
@@ -84,4 +75,4 @@ if __name__ == '__main__':
         wspace = 0.25, hspace = 0.2,
     )
 
-    plt.savefig(os.path.join(out_path, 'histogram'))
+    plt.savefig(os.path.join(out_path, 'histogram.eps'))

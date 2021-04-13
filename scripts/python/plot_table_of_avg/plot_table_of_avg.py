@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('pdf')
-
 import numpy as np
 import matplotlib.pyplot as plt
 import regex, os, sys
@@ -101,7 +98,7 @@ if __name__ == '__main__':
     ls_files = sorted(ls_files, key = lambda x: 0 if 'noisy' in x else 1)
 
     # Generate a figure to plot the data
-    fig = plt.figure(figsize = (12, 10))
+    fig = plt.figure(figsize = (14, 10))
 
     # Add 4 axis to the figure
     axis = [
@@ -140,5 +137,4 @@ if __name__ == '__main__':
         )
     )
 
-    fig.savefig(os.path.join(out_path, 'envavg_plot.pdf'))
-
+    fig.savefig(os.path.join(out_path, 'envavg_plot.eps'))
