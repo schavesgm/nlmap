@@ -198,9 +198,6 @@ Map Map::nlmeans_denoise(const float& perc_threshold, const double& r_comp)
             // Using the distance, obtain the denoising kernel
             const float kernel = std::exp(- min_dsq / (2 * hd * hd));
 
-            // Update the maximum kernel value
-            max_kernel = std::max(max_kernel, kernel);
-
             // Update the denoised value
             m_hat += kernel * grid.data[ic];
 
