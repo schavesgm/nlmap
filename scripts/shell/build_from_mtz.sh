@@ -68,7 +68,7 @@ colin-fo [/*/*/F,/*/*/SIGF]
 colin-free [/*/*/FreeR_flag]
 colin-phifom [/*/*/PHIC_ALL_LS,/*/*/FOM]
 pdbout buccaneer.pdb
-cycles 5
+cycles 10
 buccaneer-anisotropy-correction
 buccaneer-fast
 buccaneer-1st-cycles 3
