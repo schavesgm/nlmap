@@ -94,7 +94,12 @@ def plot_parameters(log_path, show = False):
 
     # Show the plot if wanted and save the data into a file
     if show: plt.show()
-    plt.savefig(os.path.join(log_path, 'comp.eps'))
+
+    try:
+        plt.savefig(os.path.join(log_path, 'comp.pdf'))
+    except:
+        plt.savefig(os.path.join(log_path, 'comp.eps'))
+
 
 # }}}
 
@@ -224,7 +229,11 @@ def plot_residues(log_path, show = False):
 
     # Show the plot if wanted and save the data into a file
     if show: plt.show()
-    plt.savefig(os.path.join(log_path, 'residues.eps'))
+
+    try:
+        plt.savefig(os.path.join(log_path, 'residues.pdf'))
+    except:
+        plt.savefig(os.path.join(log_path, 'residues.eps'))
 
 # }}}
 

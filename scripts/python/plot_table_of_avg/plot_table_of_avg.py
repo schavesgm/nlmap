@@ -137,4 +137,7 @@ if __name__ == '__main__':
         )
     )
 
-    fig.savefig(os.path.join(out_path, 'envavg_plot.eps'))
+    try:
+        fig.savefig(os.path.join(out_path, 'envavg_plot.pdf'))
+    except:
+        fig.savefig(os.path.join(out_path, 'envavg_plot.eps'))

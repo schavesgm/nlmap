@@ -75,4 +75,8 @@ if __name__ == '__main__':
         wspace = 0.25, hspace = 0.2,
     )
 
-    plt.savefig(os.path.join(out_path, 'histogram.eps'))
+    try:
+        plt.savefig(os.path.join(out_path, 'histogram.pdf'))
+    except Error:
+        plt.savefig(os.path.join(out_path, 'histogram.eps'))
+
