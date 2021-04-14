@@ -81,10 +81,10 @@ def dump_params(params_dict):
     '''
     return OrderedDict([
         ('Rw'   , param_split('Rw', params_dict)),
-        ('Rf'   , param_split('Rw', params_dict)),
-        ('rms_L', param_split('L', params_dict)),
-        ('rms_A', param_split('A', params_dict)),
-        ('rms_V', param_split('A', params_dict)),
+        ('Rf'   , param_split('Rf', params_dict)),
+        ('rms_L', param_split('L',  params_dict)),
+        ('rms_A', param_split('A',  params_dict)),
+        ('rms_V', param_split('A',  params_dict)),
     ])
 
 def dump_sigma(sigma_array):
