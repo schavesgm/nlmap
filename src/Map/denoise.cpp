@@ -158,7 +158,7 @@ Map Map::nlmeans_denoise(const float& perc_threshold, const double& r_comp)
     // Generate a table containing all the quadrants
     const vec_q* table_q = table_of_quadrants(r_comp);
 
-    // Generate a table containing all averages quadrants
+    // Generate a table containing all averaged quadrants
     const auto table_avg = table_of_avg_quadrants(table_q);
 
     // Get the maximum and minimum environment average
@@ -215,7 +215,7 @@ Map Map::nlmeans_denoise(const float& perc_threshold, const double& r_comp)
     } // -- End of the main reference vr iteration
     } // -- End of the main reference wr iteration
 
-    // // Set the denoising parameter used as field in denoised_map
+    // Set the denoising parameter used as field in denoised_map
     denoised_map.hd = hd;
 
     // Delete the heap allocated data
