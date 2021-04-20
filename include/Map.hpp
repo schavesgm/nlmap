@@ -47,6 +47,7 @@ struct Map : public gemmi::Ccp4<float>
     Fractional get_fractional(const int&, const int&, const int&) const;
 
     // -- Accessors to the data in the grid
+    float* data();
     float get_value(const int&, const int&, const int&) const;
     float& get_value(const int&, const int&, const int&);
     float operator[](const int&) const;
@@ -54,6 +55,7 @@ struct Map : public gemmi::Ccp4<float>
 
     // -- Setters for the data in the grid
     void set_value(const int&, const int&, const int&, const float&);
+    void set_value(const int&, const float&);
     void set_data(const std::vector<float>&, const bool& = false);
 
     // -- Global modifications of the map
@@ -63,11 +65,13 @@ struct Map : public gemmi::Ccp4<float>
     // Save the map into a file
     void save_map(const std::string&);
 
-    // -- Fields of the class {{{ 
+    // -- Fields of the class used to access important data {{{ 
+    // Dimensions of the map
     const int& Nu = grid.nu; 
     const int& Nv = grid.nv;
     const int& Nw = grid.nw;
 
+    // Dimensions of the unit cell represented by the map
     const double& a     = grid.unit_cell.a;
     const double& b     = grid.unit_cell.b;
     const double& c     = grid.unit_cell.c;

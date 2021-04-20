@@ -20,4 +20,9 @@ float& Map::operator[](const int& i)
 {
     return this->grid.data[i]; 
 }
+
+float* Map::data()
+{
+    return &(this->grid.data[0]);
+}
 // }}}
