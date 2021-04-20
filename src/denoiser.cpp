@@ -204,22 +204,101 @@ vector<float> Denoiser::table_of_avg_envs(Map& map, const vector<float>* table_o
 }
 // -- }}}
 
-// -- Main algorithm to denoise a map using non-local means {{{
-Map Denoiser::nlmeans_denoiser(Map& map, const float& p_thresh, const double& R_max)
+// -- Function to compare two environments included in a table {{{
+void Denoiser::compare_envs( 
+    float* mdsq, const float* envs, const int& er, const int& Ne, const octanct* rots
+) {
+    // Get the total number of rotations and octancts
+    const int& Nr = Octanct::Nr;
+    const int& No = Octanct::No;
+
+    // Loop over all possible environments contained in envs
+    for (int e = 0; e < Ne; e++) {
+
+        // Memory that will contain the 10 comparisons
+        float comps[Nr] = {};
+
+        // Compare the environments for each rotation
+        for (int r = 0; r < Nr; r++) {
+            for (int o = 0; o < No; o++) {
+
+                // Obtain the rotated reference environment and the comparison octanct
+                const float refr = envs[er * No + rots[r * No + o]];
+                const float comp = envs[e * No + o];
+
+                // Compute the distance squared
+                comps[r] += (refr - comp) * (refr - comp);
+            }
+        }
+
+        // Get the minimum distance squared for all rotations
+        float env_mindsq = comps[0];
+
+        // Update the minimum distance
+        for (int r = 1; r < Nr; r++) {
+            env_mindsq = (env_mindsq > comps[r]) ? comps[r] : env_mindsq;
+        }
+
+        // Append the minimum distance to the vector of minimum distances
+        mdsq[e] = env_mindsq;
+    }
+}
+// -- }}}
+
+// -- Function to compute the kernels given the distance squared values {{{
+void Denoiser::compute_kernel(
+    float* kernel, const float* mdsq, const int& Ne, const double& h
+) {
+    // Loop over all possible environments represented in the memory
+    for (int e = 0; e < Ne; e++) {
+        // Compute the kernel by exponentiating
+        kernel[e] = exp(- mdsq[e] / (2 * h * h));
+    }
+}
+// -- }}}
+
+
+// -- Function to compute the denoised version of the map value {{{
+float Denoiser::compute_uhat(const float* kernel, const float* maps, const int& Ne)
 {
+    // Variable that will contain the result
+    float uhat = 0.0f; float sumk = 0.0f;
+
+    // Iterate for all comparision environments
+    for (int e = 0; e < Ne; e++) {
+        uhat += kernel[e] * maps[e]; sumk += kernel[e];
+    }
+
+    return uhat / sumk;
+}
+// -- }}}
+
+// -- Main algorithm to denoise a map using non-local means {{{
+std::tuple<Map, double, vector<float>> Denoiser::nlmeans_denoiser(
+    Map& map, const float& p_thresh, const double& R_max
+) {
     // Construct some needed aliases
     const int& Ne = map.get_volume();  // -- Number of environments in the map
     const int& No = Octanct::No;       // -- Number of octancts in an env (8)
     const int& Nr = Octanct::Nr;       // -- Number of rotations per comp (10)
+    const int& Nw = map.Nw;            // -- Number of points in the w direction
+    const int& Nv = map.Nv;            // -- Number of points in the v direction
+    const int& Nu = map.Nu;            // -- Number of points in the u direction
 
     // Generate a copy of the map to denoise it
     Map denoised_map = map;
 
     // Generate a table containing all the environments
-    const float* table_envs = Denoiser::table_of_envs_ptr(map, R_max);
+    const float* table_envs = table_of_envs_ptr(map, R_max);
 
     // Generate a table containing all averaged quadrants
     const vector<float> table_avg = table_of_avg_envs(map, table_envs);
+
+    // Generate a table containing the rotated indices for each rotation
+    const octanct* table_rots = Octanct::table_of_rotations();
+
+    // Pointer to the map data in memory
+    const float* map_data = map.data();
 
     // Get the maximum and minimum environment average
     const auto min = std::min_element(table_avg.begin(), table_avg.end());
@@ -228,146 +307,33 @@ Map Denoiser::nlmeans_denoiser(Map& map, const float& p_thresh, const double& R_
     // Calculate the denoising parameter using the threshold provided
     const float hd = p_thresh * (*max - *min);
 
-#ifdef __NVCC__
-    
-    // Move the table of environments to the CUDA device
-    float* d_table_envs;
-    cudaMalloc(&d_table_envs, Ne * No * sizeof(float));
-    cudaMemcpy(d_table_envs, table_envs, Ne * No * sizeof(float), cudaMemcpyHostToDevice);
+    // Buffer to store the minimum distance squared and the kernel values
+    float* table_mdsq = new float[Ne];
+    float* table_kern = new float[Ne];
 
-    // Allocate some memory for the comparison results
-    __device__ float d_table_comp[Ne * Nr];
-    for (int c = 0; c < Ne * Nr ; c++) d_table_comp[c] = 0.0f;
+    // Iterate for each position in the grid
+    for (int er = 0; er < Ne; er++) {
 
-    // Generate a table of possible rotations and move it to device
-    octanct* table_rots = Octanct::table_of_rotations(); 
-    octanct* d_table_rots; 
-    cudaMalloc(&d_table_rots, Nr * No * sizeof(octanct));
-    cudaMemcpy(d_table_rots, table_rots, Nr * No * sizeof(octanct), cudaMemcpyHostToDevice);
+        // Get all comparisons using the the current reference environment
+        compare_envs(table_mdsq, table_envs, er, Ne, table_rots);
 
-    // Define the CUDA grids and number of threads per blocks
-    dim3 grid_dim  = dim3(Ne, Nr);
-    dim3 block_dim = dim3(No);
+        // Calculate the kernel corresponding to each distance squared
+        compute_kernel(table_kern, table_mdsq, Ne, hd);
 
-    // Wrap the CUDA comparison pointer with a thrust pointer
-    thrust::device_ptr<float> t_comp = thrust::device_pointer_cast(d_table_comp);
+        // Compute the denoised version of the map at the current location
+        const float u_hat = compute_uhat(table_kern, map_data, Ne);
 
-    // Loop for all reference environment to generate the denoised version
-    for (int re = 0; re < Ne; re++) {
-
-        // Fill the comparison matrix with the current comparison
-        compare_environments<<<grid_dim, block_dim>>>(comp, envs, d_rots, re);
-        cudaDeviceSynchronize();
-
-        for (int ce = 0; ce < Ne; ce++) {
-
-            // Sort the data to obtain the minimum distance for this comparison
-            auto min_ptr = thrust::min_element(
-                t_comp + Nr * ce, t_comp + Nr * (ce + 1) - 1
-            );
-        }
-
-        // Fill the comparison pointer with zeroes
-        thrust::fill(comp, comp + Ne * Nr, 0.0f);
+        // Change the map value with the denoised version
+        denoised_map.set_value(er, u_hat);
     }
 
-    // Free the CUDA allocated memory
-    cudaFree(d_table_envs);
-    cudaFree(d_table_comp);
-
     // Delete the heap allocated data
-    delete[] rots;
+    delete[] table_mdsq;
+    delete[] table_kern;
+    delete[] table_envs;
+    delete[] table_rots;
 
-    std::cout << "Compiled using CUDA\n";
-#else
-    std::cout << "Not compiled using CUDA\n";
-#endif
-
-    // // Iterate for each value in the grid
-    // for (int wr = 0; wr < this->Nw; wr++) {
-    // for (int vr = 0; vr < this->Nv; vr++) {
-    // for (int ur = 0; ur < this->Nu; ur++) { 
-    //     // Obtain the linear index in the grid for (ur, vr, wr)
-    //     const auto ir = size_t(wr * Nv + vr) * Nu + ur;
-
-    //     // New denoised value of the map at (ur, vr, wr)
-    //     float m_hat = 0.0f;
-
-    //     // Maximum value of the kernel and normalisation constant
-    //     float sum_kernels = 0.0f;
-
-    //     // Iterate for all other comparison environments in the grid
-    //     for (int wc = 0; wc < this->Nw; wc++) {
-    //     for (int vc = 0; vc < this->Nv; vc++) {
-    //     for (int uc = 0; uc < this->Nu; uc++) {
-
-    //         // Obtain the linear index in the grid for (uc, vc, wc)
-    //         const auto ic = size_t(wc * Nv + vc) * Nu + uc;
-
-    //         // Compare the two quadrants
-    //         const float min_dsq = Quadrant::compare_quadrants(
-    //             table_q[ir], table_q[ic]
-    //         );
-
-    //         // Using the distance, obtain the denoising kernel
-    //         const float kernel = std::exp(- min_dsq / (2 * hd * hd));
-
-    //         // Update the denoised value
-    //         m_hat += kernel * grid.data[ic];
-
-    //         // Append the kernel to the normalising constant
-    //         sum_kernels += kernel;
-
-    //     } // -- End of the main comparison uc iteration
-    //     } // -- End of the main comparison vc iteration
-    //     } // -- End of the main comparison wc iteration
-
-    //     // Change the pixel value with the denoised version
-    //     denoised_map.set_value(ur, vr, wr, m_hat / sum_kernels);
-
-    // } // -- End of the main reference ur iteration
-    // } // -- End of the main reference vr iteration
-    // } // -- End of the main reference wr iteration
-
-    // // Set the denoising parameter used as field in denoised_map
-    // denoised_map.hd = hd;
-
-    // // Delete the heap allocated data
-    // delete[] table_q;
-
-    return denoised_map;
-
+    // Return a tuple containing the denoised map and the denoised parameter
+    return std::make_tuple(denoised_map, hd, table_avg);
 }
 // -- }}}
-
-// -- CUDA kernel used to compute the comparisons on the GPU {{{
-#ifdef __NVCC__
-__global__
-void compare_environments(float* comp, float* envs, octanct* rots, int ref_idx)
-{
-    // Select the environment and octanct index for the current thread
-    int gidx = blockIdx.x * blockDim.x + threadIdx.x;
-
-    // Select the rotated reference octanct index for the current thread
-    int ridx = ref_idx * blockDim.x + rots[blockIdx.y * blockDim.x + threadIdx.x];
-
-    // Select the environment and rotation index to output the data
-    int oidx = blockIdx.x * gridDim.y + blockIdx.y;
-
-    // Calculate the difference of environments using the calculated indices
-    float diff = envs[ridx] - envs[gidx];
-
-    // Update the comparison using the table of rotations
-    atomicAdd(comp[oidx], diff * diff);
-
-    // Synchronize the threads
-    __syncthreads();
-}
-
-__global__
-void compute_denoise(float* denoised, thrust::device_ptr<float> comp, float h)
-{
-
-}
-#endif
-// }}}
