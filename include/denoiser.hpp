@@ -44,8 +44,7 @@ namespace Denoiser
     // -- }}}
     
     // -- Compare two environments {{{
-    void compare_envs(float*, const float*, const int&, const int&, const octanct*);
-    void compute_kernel(float*, const float*, const int&, const double&);
+    void compute_kernels(float*, const float*, const octanct*, const int&, const int&, const double&);
     float compute_uhat(const float*, const float*, const int&);
     // -- }}}
 };

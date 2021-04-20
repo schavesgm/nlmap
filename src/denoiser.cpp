@@ -205,8 +205,9 @@ vector<float> Denoiser::table_of_avg_envs(Map& map, const vector<float>* table_o
 // -- }}}
 
 // -- Function to compare two environments included in a table {{{
-void Denoiser::compare_envs( 
-    float* mdsq, const float* envs, const int& er, const int& Ne, const octanct* rots
+void Denoiser::compute_kernels( 
+    float* kernels, const float* envs, const octanct* rots, 
+    const int& er, const int& Ne, const double& hd
 ) {
     // Get the total number of rotations and octancts
     const int& Nr = Octanct::Nr;
@@ -236,30 +237,19 @@ void Denoiser::compare_envs(
 
         // Update the minimum distance
         for (int r = 1; r < Nr; r++) {
-            env_mindsq = (env_mindsq > comps[r]) ? comps[r] : env_mindsq;
+            if (env_mindsq > comps[r]) { 
+                env_mindsq = comps[r]; 
+            }
         }
 
         // Append the minimum distance to the vector of minimum distances
-        mdsq[e] = env_mindsq;
+        kernels[e] = exp(- env_mindsq / (2 * hd * hd));
     }
 }
 // -- }}}
-
-// -- Function to compute the kernels given the distance squared values {{{
-void Denoiser::compute_kernel(
-    float* kernel, const float* mdsq, const int& Ne, const double& h
-) {
-    // Loop over all possible environments represented in the memory
-    for (int e = 0; e < Ne; e++) {
-        // Compute the kernel by exponentiating
-        kernel[e] = exp(- mdsq[e] / (2 * h * h));
-    }
-}
-// -- }}}
-
 
 // -- Function to compute the denoised version of the map value {{{
-float Denoiser::compute_uhat(const float* kernel, const float* maps, const int& Ne)
+inline float Denoiser::compute_uhat(const float* kernel, const float* maps, const int& Ne)
 {
     // Variable that will contain the result
     float uhat = 0.0f; float sumk = 0.0f;
@@ -308,28 +298,20 @@ std::tuple<Map, double, vector<float>> Denoiser::nlmeans_denoiser(
     const float hd = p_thresh * (*max - *min);
 
     // Buffer to store the minimum distance squared and the kernel values
-    float* table_mdsq = new float[Ne];
-    float* table_kern = new float[Ne];
+    float* kernels = new float[Ne];
 
     // Iterate for each position in the grid
     for (int er = 0; er < Ne; er++) {
 
-        // Get all comparisons using the the current reference environment
-        compare_envs(table_mdsq, table_envs, er, Ne, table_rots);
-
         // Calculate the kernel corresponding to each distance squared
-        compute_kernel(table_kern, table_mdsq, Ne, hd);
+        compute_kernels(kernels, table_envs, table_rots, er, Ne, hd);
 
         // Compute the denoised version of the map at the current location
-        const float u_hat = compute_uhat(table_kern, map_data, Ne);
-
-        // Change the map value with the denoised version
-        denoised_map.set_value(er, u_hat);
+        denoised_map.set_value(er, compute_uhat(kernels, map_data, Ne));
     }
 
     // Delete the heap allocated data
-    delete[] table_mdsq;
-    delete[] table_kern;
+    delete[] kernels;
     delete[] table_envs;
     delete[] table_rots;
 
