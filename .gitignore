@@ -2,6 +2,7 @@
 data
 out
 log
+old
 
 # Ignore executable
 denoise_map

@@ -13,9 +13,6 @@
 #include <gemmi/ccp4.hpp>
 #include <gemmi/unitcell.hpp>
 
-// Include user-defined libraries
-#include "quadrant.hpp"
-
 using namespace gemmi;
 
 struct Map : public gemmi::Ccp4<float>
@@ -63,22 +60,8 @@ struct Map : public gemmi::Ccp4<float>
     void normalise();
     float add_noise(const float& = 1.0, const bool& = false);
 
-    // -- Denoiser methods
-    Map nlmeans_denoise(const float&, const double&);
-
-    // Table containing the nearest indices in the lattice
-    std::vector<gemmi::GridBase<float>::Point> table_of_near_indices(const double&);
-
-    // Precalculate all quadrants in the lattice
-    vec_q* table_of_quadrants(const double&);
-    std::vector<float> table_of_avg_quadrants(const vec_q*);
-
-    // Get all quadrants around a given point in the grid
-    vec_q get_quadrants(const int&, const int&, const int&, const std::vector<gemmi::GridBase<float>::Point>&);
-
-    // Generate the file of averages
+    // Save the map into a file
     void save_map(const std::string&);
-    void save_table_of_avg(const std::string&, const double&);
 
     // -- Fields of the class {{{ 
     const int& Nu = grid.nu; 
@@ -91,8 +74,5 @@ struct Map : public gemmi::Ccp4<float>
     const double& alpha = grid.unit_cell.alpha;
     const double& beta  = grid.unit_cell.beta;
     const double& gamma = grid.unit_cell.gamma;
-
-    // Field containing the h_value for the denoiser
-    float hd = 0.0f;
     // -- }}}
 };
