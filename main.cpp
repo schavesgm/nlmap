@@ -16,9 +16,9 @@ int main(const int argc, const char** argv)
     const char* map_path     = argv[2];
 
     // Added sigma noise to the map
-    const float  sigma  = std::stof(argv[3]);
-    const float  perc_t = std::stof(argv[4]);
-    const double r_comp = std::stof(argv[5]);
+    const float sigma  = std::stof(argv[3]);
+    const float perc_t = std::stof(argv[4]);
+    const float r_comp = std::stof(argv[5]);
 
     // Generate the path to the protein location
     const auto map_location = Path::join_path(protein_path, map_path);
@@ -59,7 +59,7 @@ int main(const int argc, const char** argv)
         Path::join_path(out_path, "table_avg_denoised.dat"), den_avg, original
     );
 
-    // Output the value of h to capture it in the pipeline
+    // // Output the value of h to capture it in the pipeline
     std::cout << hd << std::endl;
 
 return 0;
