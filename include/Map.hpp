@@ -24,18 +24,18 @@ struct Map : public gemmi::Ccp4<float>
     void operator=(const Map&);
 
     // -- Dimensions of the grid
-    const int get_Nu() const;
-    const int get_Nv() const;
-    const int get_Nw() const;
-    const int get_volume()  const;
+    int get_Nu() const;
+    int get_Nv() const;
+    int get_Nw() const;
+    int get_volume()  const;
     
     // -- Properties of the unit cell
-    const float get_a() const;     // (a, 0, 0, 0, 0, 0)
-    const float get_b() const;     // (0, b, 0, 0, 0, 0)
-    const float get_c() const;     // (0, 0, c, 0, 0, 0)
-    const float get_alpha() const; // (0, 0, 0, alpha, 0, 0)
-    const float get_beta() const;  // (0, 0, 0, 0, beta, 0)
-    const float get_gamma() const; // (0, 0, 0, 0, 0, gamma)
+    float get_a() const;     // (a, 0, 0, 0, 0, 0)
+    float get_b() const;     // (0, b, 0, 0, 0, 0)
+    float get_c() const;     // (0, 0, c, 0, 0, 0)
+    float get_alpha() const; // (0, 0, 0, alpha, 0, 0)
+    float get_beta() const;  // (0, 0, 0, 0, beta, 0)
+    float get_gamma() const; // (0, 0, 0, 0, 0, gamma)
 
     // -- Mutable properties of the map
     float max_value() const;
