@@ -18,5 +18,16 @@ void Map::set_data(const std::vector<float>& data, const bool& normalise)
     // Normalise if needed
     if (normalise) this->normalise();
 }
+
+void Map::set_data(const float& value, const bool& normalise)
+{
+    // Set the data in the map to a given value
+    for (int i = 0; i < get_volume(); i++) {
+        this->grid.data[i] = value;
+    }
+
+    // Normalise if needed
+    if (normalise) this->normalise();
+}
 // -- }}}
 

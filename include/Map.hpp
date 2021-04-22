@@ -57,6 +57,7 @@ struct Map : public gemmi::Ccp4<float>
     void set_value(const int&, const int&, const int&, const float&);
     void set_value(const int&, const float&);
     void set_data(const std::vector<float>&, const bool& = false);
+    void set_data(const float&, const bool& = false);
 
     // -- Global modifications of the map
     void normalise();
