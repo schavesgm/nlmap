@@ -36,13 +36,21 @@ namespace Denoiser
     vector<float> average_environment(const vector<float>*, const float&);
     // -- }}}
 
-    // -- Construct the table of averaged environments for of the map {{{
+    // -- Construct a table containing the average of each environment {{{
     vector<float> table_of_envavg(Map&, const float&);
     vector<float> table_of_envavg(Map&, const float*);
     // -- }}}
     
-    // -- Compare two environments {{{
-    void compute_kernels(float*, const float*, const octanct*, const int&, const int&, const float&, const vector<float>&);
+    // -- Construct a table containing the standard deviation of each environment {{{
+    vector<float> table_of_envstd(Map&, const float*);
+    // -- }}}
+    
+    // -- Compare environments by computing the kernels and the denoised map value {{{
+    void compute_kernels(
+        float*, const float*, const octanct*, const int&, const int&, 
+        const float&, const vector<float>&, const vector<float>&
+    );
+
     float compute_uhat(const float*, const float*, const int&);
     // -- }}}
 };

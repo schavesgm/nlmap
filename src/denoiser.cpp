@@ -170,10 +170,42 @@ vector<float> Denoiser::table_of_envavg(Map& map, const float* envs)
 }
 // -- }}}
 
+// -- Compute the standard deviation for each environment {{{
+vector<float> Denoiser::table_of_envstd(Map& map, const float* envs)
+{
+    // Get some needed aliases
+    const int& Ne = map.get_volume();
+    const int& No = Octanct::No;
+
+    // Compute the average for each environment in the map
+    vector<float> avg_envs = Denoiser::table_of_envavg(map, envs);
+
+    // Allocate memory for the table of averaged environments
+    vector<float> std_envs(Ne);
+
+    // Build the average for each environment
+    for (int e = 0; e < Ne; e++) {
+
+        // Temporary that holds the average value
+        float env_std = 0.0f;
+
+        // Add all octanct values to the average
+        for (octanct o = 0; o < No; o++) {
+            env_std += std::pow(envs[e * No + o] - avg_envs[e], 2);
+        }
+
+        // Compute the averaged environment
+        std_envs[e] = std::sqrt(env_std / (No - 1));
+    }
+
+    return std_envs;
+}
+// -- }}}
+
 // -- Function to compare two environments included in a table {{{
 void Denoiser::compute_kernels( 
-    float* kernels, const float* envs, const octanct* rots, 
-    const int& er, const int& Ne, const float& hd, const vector<float>& envavg
+    float* kernels, const float* envs, const octanct* rots, const int& er, const int& Ne, 
+    const float& hd, const vector<float>& envavg, const vector<float>& envstd
 ) {
     // Get the total number of rotations and octancts
     const int& Nr = Octanct::Nr;
@@ -183,10 +215,18 @@ void Denoiser::compute_kernels(
     const float two_sigmasq = 2 * hd * hd;
     const int ref_row = er * No;
 
+    // References to some repeated memory addressed
+    const float& ref_avg = envavg[er];
+    const float& ref_std = envstd[er];
+
     for (int e = 0; e < Ne; e++) {
 
+        // Calculate the needed filter parameters
+        const float dA = envavg[e] - ref_avg;
+        const float dS = envstd[e] - ref_std;
+
         // Filter the data using the averaged environment
-        if (std::abs(envavg[e] - envavg[er]) < hd) {
+        if ((std::abs(dA + dS) < hd) && (std::abs(dA - dS) < hd)) {
 
             // Variable to hold the minimum value among all comparison
             float min_dsq = 1000000;
@@ -255,8 +295,11 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     // Generate a table containing all the environments
     const float* envs = table_of_envs(map, R_max);
 
-    // Generate a table containing all averaged quadrants
+    // Generate a table containing the average of each environment
     const vector<float> envavg = table_of_envavg(map, envs);
+
+    // Generate a table containing the standard dev of each environment
+    const vector<float> envstd = Denoiser::table_of_envstd(map, envs);
 
     // Generate a table containing the rotated indices for each rotation
     const octanct* rots = Octanct::table_of_rotations();
@@ -278,7 +321,7 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     for (int er = 0; er < Ne; er++) {
 
         // Calculate the kernel corresponding to each distance squared
-        compute_kernels(kernels, envs, rots, er, Ne, hd, envavg);
+        compute_kernels(kernels, envs, rots, er, Ne, hd, envavg, envstd);
 
         // Compute the denoised version of the map at the current location
         denoised_map.set_value(er, compute_uhat(kernels, map_data, Ne));
