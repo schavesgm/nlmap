@@ -2,6 +2,7 @@
 #include <sys/stat.h> 
 #include <sys/types.h> 
 #include <string>
+#include <tuple>
 
 // User defined modules
 #include <Map.hpp>
@@ -30,10 +31,15 @@ int main(const int argc, const char** argv)
     original.add_noise(sigma);
 
     // Denoise the map using non-local means denoiser
-    auto [denoised, hd, den_avg] = Denoiser::nlmeans_denoiser(original, perc_t, r_comp);
+    auto denoiser_out = Denoiser::nlmeans_denoiser(original, perc_t, r_comp);
+
+    // References to the objects encoded in the denoiser output
+    auto& denoised = std::get<0>(denoiser_out);
+    auto& hd       = std::get<1>(denoiser_out);
+    auto& den_avg  = std::get<2>(denoiser_out);
 
     // Calculate the original table of averages
-    auto org_avg = Denoiser::table_of_avg_envs(original, r_comp);
+    auto org_avg = Denoiser::table_of_envavg(original, r_comp);
 
     // Generate the folder to save the data to
     const auto out_path = Path::format_str(
