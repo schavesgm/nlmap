@@ -65,7 +65,7 @@ int main(const int argc, const char** argv)
         Path::join_path(out_path, "table_avg_denoised.dat"), den_avg, original
     );
 
-    // // Output the value of h to capture it in the pipeline
+    // Output the value of h to capture it in the pipeline
     std::cout << hd << std::endl;
 
 return 0;
