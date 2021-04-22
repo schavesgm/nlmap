@@ -183,6 +183,7 @@ void Denoiser::compute_kernels(
     const float two_sigmasq = 2 * hd * hd;
     const int ref_row = er * No;
 
+    // Iterate through all environments in the map
     for (int e = 0; e < Ne; e++) {
 
         // Filter the data using the averaged environment
@@ -285,8 +286,6 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
 
         // Set the kernels memory block to zero
         memset(kernels, 0.0f, Ne * sizeof(float));
-
-        if (er == 1000) { break; }
     }
 
     // Delete the heap allocated data
