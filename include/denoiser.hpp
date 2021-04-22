@@ -23,13 +23,12 @@ using std::vector;
 namespace Denoiser
 {
     // -- Basic function used for denoising {{{
-    std::tuple<Map, double, vector<float>> nlmeans_denoiser(Map&, const float&, const double&);
+    std::tuple<Map, float, vector<float>> nlmeans_denoiser(Map&, const float&, const float&);
     // -- }}}
 
     // -- Functions to precalculate needed tables for the denoiser {{{
-    vector<float>* table_of_envs_vector(Map&, const double&);
-    float* table_of_envs_ptr(Map&, const double&);
-    vector<grid_point> table_of_near_indices(Map&, const double&);
+    float* table_of_envs(Map&, const float&);
+    vector<grid_point> table_of_indices(Map&, const float&);
     // -- }}}
 
     // -- Construct the environment around each point {{{
@@ -38,13 +37,12 @@ namespace Denoiser
     // -- }}}
 
     // -- Construct the table of averaged environments for of the map {{{
-    vector<float> table_of_avg_envs(Map&, const double&);
-    vector<float> table_of_avg_envs(Map&, const float*);
-    vector<float> table_of_avg_envs(Map&, const vector<float>*);
+    vector<float> table_of_envavg(Map&, const float&);
+    vector<float> table_of_envavg(Map&, const float*);
     // -- }}}
     
     // -- Compare two environments {{{
-    void compute_kernels(float*, const float*, const octanct*, const int&, const int&, const double&);
+    void compute_kernels(float*, const float*, const octanct*, const int&, const int&, const float&, const vector<float>&);
     float compute_uhat(const float*, const float*, const int&);
     // -- }}}
 };

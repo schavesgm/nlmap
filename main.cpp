@@ -17,9 +17,9 @@ int main(const int argc, const char** argv)
     const char* map_path     = argv[2];
 
     // Added sigma noise to the map
-    const float  sigma  = std::stof(argv[3]);
-    const float  perc_t = std::stof(argv[4]);
-    const double r_comp = std::stof(argv[5]);
+    const float sigma  = std::stof(argv[3]);
+    const float perc_t = std::stof(argv[4]);
+    const float r_comp = std::stof(argv[5]);
 
     // Generate the path to the protein location
     const auto map_location = Path::join_path(protein_path, map_path);
@@ -33,13 +33,13 @@ int main(const int argc, const char** argv)
     // Denoise the map using non-local means denoiser
     auto denoiser_out = Denoiser::nlmeans_denoiser(original, perc_t, r_comp);
 
-    // Obtain some references to the data in the tuple
+    // References to the objects encoded in the denoiser output
     auto& denoised = std::get<0>(denoiser_out);
     auto& hd       = std::get<1>(denoiser_out);
     auto& den_avg  = std::get<2>(denoiser_out);
 
     // Calculate the original table of averages
-    auto org_avg = Denoiser::table_of_avg_envs(original, r_comp);
+    auto org_avg = Denoiser::table_of_envavg(original, r_comp);
 
     // Generate the folder to save the data to
     const auto out_path = Path::format_str(
@@ -65,7 +65,7 @@ int main(const int argc, const char** argv)
         Path::join_path(out_path, "table_avg_denoised.dat"), den_avg, original
     );
 
-    // Output the value of h to capture it in the pipeline
+    // // Output the value of h to capture it in the pipeline
     std::cout << hd << std::endl;
 
 return 0;
