@@ -12,6 +12,7 @@
 // -- User defined libraries
 #include "octanct.hpp"
 #include "Map.hpp"
+#include "stats.hpp"
 
 // Some definitions to clean the code
 #define grid_point gemmi::GridBase<float>::Point
@@ -23,7 +24,8 @@ using std::vector;
 namespace Denoiser
 {
     // -- Basic function used for denoising {{{
-    std::tuple<Map, float, vector<float>> nlmeans_denoiser(Map&, const float&, const float&);
+    std::tuple<Map, float, vector<float>, vector<float>> 
+        nlmeans_denoiser(Map&, const float&, const float&);
     // -- }}}
 
     // -- Indices of the grid whose distance to a central point is less than a given one {{{
@@ -34,30 +36,12 @@ namespace Denoiser
     float* table_of_envs(Map&, const float&);
     // -- }}}
 
-    // // -- Functions to precalculate needed tables for the denoiser {{{
-    // float* table_of_envs(Map&, const float&);
-    // // -- }}}
-
     // -- Construct the environment around each point {{{
     vector<float> get_env(const Map&, const int&, const int&, const int&, const vector<grid_point>&);
-    vector<float> avg_env(const vector<float>*, const float&);
+    vector<float> avg_env(const vector<float>*);
     // -- }}}
 
-    // // -- Construct a table containing the average of each environment {{{
-    // vector<float> table_of_envavg(Map&, const float&);
-    // vector<float> table_of_envavg(Map&, const float*);
-    // // -- }}}
-    // 
-    // // -- Construct a table containing the standard deviation of each environment {{{
-    // vector<float> table_of_envstd(Map&, const float*);
-    // // -- }}}
-    // 
-    // // -- Compare environments by computing the kernels and the denoised map value {{{
-    // void compute_kernels(
-    //     float*, const float*, const octanct*, const int&, const int&, 
-    //     const float&, const vector<float>&, const vector<float>&
-    // );
-
-    // float compute_uhat(const float*, const float*, const int&);
-    // // -- }}}
+    // -- Construct a table containing the average of each environment {{{
+    vector<float> table_of_stats(Map&, const float&);
+    // -- }}}
 };
