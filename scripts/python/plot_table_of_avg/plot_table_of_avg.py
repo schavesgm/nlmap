@@ -97,7 +97,7 @@ if __name__ == '__main__':
     matches = regex.match(SIM_REGEX, sim_name)
 
     # Get the data from the path
-    ls_files = [f for f in os.listdir(path_to_tables) if 'table' in f]
+    ls_files = [f for f in os.listdir(path_to_tables) if 'stat' in f]
     ls_files = sorted(ls_files, key = lambda x: 0 if 'noisy' in x else 1)
 
     # Generate a figure to plot the data

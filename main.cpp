@@ -9,6 +9,7 @@
 #include <path.hpp>
 #include <denoiser.hpp>
 #include <utils.hpp>
+#include <stats.hpp>
 
 int main(const int argc, const char** argv)
 {
@@ -34,12 +35,13 @@ int main(const int argc, const char** argv)
     auto denoiser_out = Denoiser::nlmeans_denoiser(original, perc_t, r_comp);
 
     // References to the objects encoded in the denoiser output
-    auto& denoised = std::get<0>(denoiser_out);
-    auto& hd       = std::get<1>(denoiser_out);
-    auto& den_avg  = std::get<2>(denoiser_out);
+    auto& denoised  = std::get<0>(denoiser_out);
+    auto& hd        = std::get<1>(denoiser_out);
+    auto& d_stats   = std::get<2>(denoiser_out);
+    auto& prefilter = std::get<3>(denoiser_out);
 
-    // Calculate the original table of averages
-    auto org_avg = Denoiser::table_of_envavg(original, r_comp);
+    // Calculate the original table of statistics
+    auto o_stats = Denoiser::table_of_stats(original, r_comp);
 
     // Generate the folder to save the data to
     const auto out_path = Path::format_str(
@@ -56,16 +58,19 @@ int main(const int argc, const char** argv)
     denoised.save_map(Path::join_path(out_path, "denoised.map"));
      
     // Save the average for each environment in the noisy map
-    Utils::save_envavg(
-        Path::join_path(out_path, "table_avg_noisy.dat"), org_avg, original
+    Utils::save_envstats(
+        Path::join_path(out_path, "stat_noisy.dat"), o_stats, original
     );
 
     // Save the average for each environment in the denoised map
-    Utils::save_envavg(
-        Path::join_path(out_path, "table_avg_denoised.dat"), den_avg, original
+    Utils::save_envstats(
+        Path::join_path(out_path, "stat_denoised.dat"), d_stats, original
     );
 
-    // // Output the value of h to capture it in the pipeline
+    // Save the prefilter statistics into a file
+    Utils::save_prefilter(Path::join_path(out_path, "prefilter.dat"), prefilter);
+
+    // Output the value of h to capture it in the pipeline
     std::cout << hd << std::endl;
 
 return 0;
