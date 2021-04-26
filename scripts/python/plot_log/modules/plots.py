@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -15,7 +18,7 @@ MARKER = ['+', 'x', '*', 'd']
 plt.rcParams['font.size'] = 12
 
 # Plot the parameters from the log path for each build {{{
-def plot_parameters(log_path, show = False):
+def plot_parameters(log_path):
     ''' Plot the parameters from a path where log is located. '''
 
     # Assert the existence of the log path
@@ -92,19 +95,12 @@ def plot_parameters(log_path, show = False):
         bbox_to_anchor = (0, 0.95, 1, 0)
     )
 
-    # Show the plot if wanted and save the data into a file
-    if show: plt.show()
-
-    try:
-        plt.savefig(os.path.join(log_path, 'comp.pdf'))
-    except:
-        plt.savefig(os.path.join(log_path, 'comp.eps'))
-
-
+    plt.close()
+    fig.savefig(os.path.join(log_path, 'comp'))
 # }}}
 
 # Plot the residues from the log file {{{
-def plot_residues(log_path, show = False):
+def plot_residues(log_path):
     ''' Plot the parameters from a path where log is located. '''
 
     # Assert the existence of the log path
@@ -227,13 +223,8 @@ def plot_residues(log_path, show = False):
         wspace = 0.25, hspace = 0.2,
     )
 
-    # Show the plot if wanted and save the data into a file
-    if show: plt.show()
-
-    try:
-        plt.savefig(os.path.join(log_path, 'residues.pdf'))
-    except:
-        plt.savefig(os.path.join(log_path, 'residues.eps'))
+    plt.close()
+    fig.savefig(os.path.join(log_path, 'residues'))
 
 # }}}
 

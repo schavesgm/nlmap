@@ -1,4 +1,7 @@
 #!/bin/python3
+import matplotlib
+matplotlib.use('Agg')
+
 import os, sys, regex
 import matplotlib.pyplot as plt
 
@@ -70,13 +73,9 @@ if __name__ == '__main__':
         )
 
     # Increase distance between subplots
-    plt.subplots_adjust(
+    fig.subplots_adjust(
         left = 0.1, right = 0.9,
         wspace = 0.25, hspace = 0.2,
     )
 
-    try:
-        plt.savefig(os.path.join(out_path, 'histogram.pdf'))
-    except Error:
-        plt.savefig(os.path.join(out_path, 'histogram.eps'))
-
+    fig.savefig(os.path.join(out_path, 'histogram'))
