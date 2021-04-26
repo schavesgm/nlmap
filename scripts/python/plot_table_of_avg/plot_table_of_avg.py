@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import numpy as np
 import matplotlib.pyplot as plt
 import regex, os, sys
@@ -137,7 +140,5 @@ if __name__ == '__main__':
         )
     )
 
-    try:
-        fig.savefig(os.path.join(out_path, 'envavg_plot.pdf'))
-    except:
-        fig.savefig(os.path.join(out_path, 'envavg_plot.eps'))
+    plt.close()
+    fig.savefig(os.path.join(out_path, 'envavg_plot'))

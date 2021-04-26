@@ -219,6 +219,7 @@ void Denoiser::compute_kernels(
     const float& ref_avg = envavg[er];
     const float& ref_std = envstd[er];
 
+    // Iterate through all environments in the map
     for (int e = 0; e < Ne; e++) {
 
         // Calculate the needed filter parameters
@@ -328,8 +329,6 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
 
         // Set the kernels memory block to zero
         memset(kernels, 0.0f, Ne * sizeof(float));
-
-        if (er == 1000) { break; }
     }
 
     // Delete the heap allocated data

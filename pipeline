@@ -94,14 +94,19 @@ done
 header_message "Creating a log file from the processed pipeline"
 python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
 
-# -- Obtain the histogram plot from the data
-header_message "Generating histogram plot from the processed pipeline"
-python3 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
-
 # -- Generate the plots from the log data
 header_message "Generating log plots from the processed pipeline"
 python3 ${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}
 
+# -- Obtain the histogram plot from the data
+header_message "Generating histogram plot from the processed pipeline"
+python3 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
+
 # -- Plot the table of averages from the data
 header_message "Generating table of averages plots"
 python3 ${TABLE_PLOT} ${PROT_PATH}/maps/${SIM_NAME} ${SIM_NAME} ./out/log/${PROTEIN}/${SIM_NAME}
+
+# -- Convert all the png files into pdf files
+for png_file in $(ls out/log/${PROTEIN}/${SIM_NAME}/*.png); do
+    convert ${png_file} ${png_file/.png/.pdf}
+done
