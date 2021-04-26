@@ -73,7 +73,7 @@ buccaneer-anisotropy-correction
 buccaneer-fast
 buccaneer-1st-cycles 3
 buccaneer-1st-sequence-reliability 0.95
-buccaneer-nth-cycles 2
+buccaneer-nth-cycles 7
 buccaneer-nth-sequence-reliability 0.95
 buccaneer-nth-correlation-mode
 buccaneer-resolution 2
