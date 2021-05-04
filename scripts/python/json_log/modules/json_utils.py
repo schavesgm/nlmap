@@ -12,7 +12,7 @@ from .parse_utils import parse_map
 __all__ = ['pipeline_JSON']
 
 # Simulation name string format
-SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)'
+SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)_e(\d+.\d+)'
 
 # Custom JSON encoder and container to serialise data {{{
 class InlineList:
@@ -163,6 +163,7 @@ def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
     json_out['h_denoise']    = float(matches.group(2))
     json_out['r_comparison'] = float(matches.group(3))
     json_out['h_proportion'] = float(matches.group(4))
+    json_out['pref_eps']     = float(matches.group(5))
 
     # Add the builds to the dictionary
     json_out['builds'] = OrderedDict()

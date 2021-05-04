@@ -88,7 +88,7 @@ class AvgTable:
 if __name__ == '__main__':
 
     # Simulation regex
-    SIM_REGEX = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)'
+    SIM_REGEX = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)_e(\d+.\d+)'
 
     # Get the path to the files and the simulation name
     path_to_tables, sim_name, out_path = sys.argv[1:4]
@@ -134,9 +134,10 @@ if __name__ == '__main__':
 
     # Add the title to the data
     fig.suptitle(
-        's = {} - h = {} - p = {} - r = {} (A)'.format(
+        's = {}, h = {}, p = {},  r = {} (A), e = {}'.format(
             matches.group(1), matches.group(2),
-            matches.group(3), matches.group(4)
+            matches.group(3), matches.group(4),
+            matches.group(5)
         )
     )
 

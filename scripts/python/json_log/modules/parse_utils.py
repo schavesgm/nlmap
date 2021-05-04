@@ -45,9 +45,12 @@ def parse_refmtz(path):
         params_results, resids_results
     )
 
+    # Get the space group from the data
+    sp_group  = re.findall(r'\'.*\'', space_group)[0]
+
     # Dictionary containing the results
     results_reftmtz = {
-        'spgroup' : re.findall(r'\w+ \d+ \d+ \d+', space_group)[0],
+        'spgroup' : sp_group.replace('\'', ''),
         'resrange': re.findall(r'\d+.\d+ A', res_range[0])[0],
         'params'  : params,
         'resids'  : resids
