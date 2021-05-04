@@ -22,6 +22,7 @@ PROTEIN=${1};               assert_var_exists "protein"   ${1}
 SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
 HPERC=$(printf %.4f ${3});  assert_var_exists "h_perc"    ${3}
 RCOMP=$(printf %.4f ${4});  assert_var_exists "r_compar"  ${4}
+PFEPS=$(printf %.4f ${5});  assert_var_exists "pref_eps"  ${5}
 
 # -- Directories to the scripts
 MAKE_MAP="${BASE_PATH}/scripts/shell/make_map.sh"
@@ -48,6 +49,7 @@ header_message "Protein selected: ${PROTEIN}"
 header_message "Standard deviation of added noise: ${SIGMA}"
 header_message "Proportion used in denoising parameter: ${HPERC}"
 header_message "Radious of comparison: ${RCOMP} (A)"
+header_message "Prefiler epsilon: ${PFEPS}"
 
 # -- Create a .map file from the .mtz file
 header_message "Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)"
@@ -63,13 +65,13 @@ ${BUILD_MAP} refmac.map ${PROT_PATH} refmap
   
 # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
-HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HPERC} ${RCOMP})
+HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HPERC} ${RCOMP} ${PFEPS})
 
 # -- Restrict the denoiser to 4 digits
 HDEN=$(printf %.4f ${HDEN})
 
 # -- Specific name of the simulation name
-SIM_NAME="s${SIGMA}_h${HDEN}_r${RCOMP}_p${HPERC}"
+SIM_NAME="s${SIGMA}_h${HDEN}_r${RCOMP}_p${HPERC}_e${PFEPS}"
  
 # -- Build a model for each processed map file
 for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*.map); do
