@@ -197,16 +197,13 @@ vector<float> Denoiser::table_of_stats(Map& map, const float& r_comp)
 
 // -- Main algorithm to denoise a map using non-local means {{{
 std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
-    Map& map, const float& p_thresh, const float& r_comp
+    Map& map, const float& p_thresh, const float& r_comp, const float& eps
 ) {
     // Construct some needed aliases
     const int& Ne = map.get_volume();  // -- Number of environments in the map
     const int& No = Octanct::No;       // -- Number of octancts in an env (8)
     const int& Nr = Octanct::Nr;       // -- Number of rotations per comp (10)
     const int  Nv = No + 2;            // -- Number of octancts + env_avg + env_std
-
-    // Prefilter size
-    const float eps = 0.5;
 
     // Generate a copy of the map to denoise it
     Map denoised_map = map;

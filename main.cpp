@@ -21,6 +21,7 @@ int main(const int argc, const char** argv)
     const float sigma  = std::stof(argv[3]);
     const float perc_t = std::stof(argv[4]);
     const float r_comp = std::stof(argv[5]);
+    const float feps   = std::stof(argv[6]);
 
     // Generate the path to the protein location
     const auto map_location = Path::join_path(protein_path, map_path);
@@ -32,7 +33,7 @@ int main(const int argc, const char** argv)
     original.add_noise(sigma);
 
     // Denoise the map using non-local means denoiser
-    auto denoiser_out = Denoiser::nlmeans_denoiser(original, perc_t, r_comp);
+    auto denoiser_out = Denoiser::nlmeans_denoiser(original, perc_t, r_comp, feps);
 
     // References to the objects encoded in the denoiser output
     auto& denoised  = std::get<0>(denoiser_out);
@@ -45,7 +46,7 @@ int main(const int argc, const char** argv)
 
     // Generate the folder to save the data to
     const auto out_path = Path::format_str(
-        "%s/maps/s%.4f_h%.4f_r%.4f_p%.4f", protein_path, sigma, hd, r_comp, perc_t
+        "%s/maps/s%.4f_h%.4f_r%.4f_p%.4f_e%.4f", protein_path, sigma, hd, r_comp, perc_t, feps
     );
 
     // Create the output path if needed
