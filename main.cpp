@@ -20,59 +20,69 @@ int main(const int argc, const char** argv)
     // Added sigma noise to the map
     const float sigma  = std::stof(argv[3]);
     const float perc_t = std::stof(argv[4]);
-    const float r_comp = std::stof(argv[5]);
+    const float r_env  = std::stof(argv[5]);
     const float feps   = std::stof(argv[6]);
 
-    // Generate the path to the protein location
-    const auto map_location = Path::join_path(protein_path, map_path);
+    // Obtain the name of the protein from the protein path
+    const auto protein = Path::get_basename(protein_path);
 
     // Load a Map file from memory
-    Map original(map_location);
+    Map original_map(Path::join_path(protein_path, map_path));
 
-    // Add some noise to the map
-    original.add_noise(sigma);
+    // Add some noise to the map according to sigma
+    original_map.add_noise(sigma);
 
-    // Denoise the map using non-local means denoiser
-    auto denoiser_out = Denoiser::nlmeans_denoiser(original, perc_t, r_comp, feps);
+    // Denoise the map using the map denoiser
+    auto denoiser_output = Denoiser::nlmeans_denoiser(original_map, perc_t, r_env, feps);
 
     // References to the objects encoded in the denoiser output
-    auto& denoised  = std::get<0>(denoiser_out);
-    auto& hd        = std::get<1>(denoiser_out);
-    auto& d_stats   = std::get<2>(denoiser_out);
-    auto& prefilter = std::get<3>(denoiser_out);
+    auto& denoised_map       = std::get<0>(denoiser_output);
+    auto& denoise_param      = std::get<1>(denoiser_output);
+    auto& denoised_env_stats = std::get<2>(denoiser_output);
+    auto& monitor_data       = std::get<3>(denoiser_output);
 
-    // Calculate the original table of statistics
-    auto o_stats = Denoiser::table_of_stats(original, r_comp);
+    // Calculate the statistics of the original map
+    auto original_env_stats = Denoiser::table_of_stats(original_map, r_env);
 
-    // Generate the folder to save the data to
-    const auto out_path = Path::format_str(
-        "%s/maps/s%.4f_h%.4f_r%.4f_p%.4f_e%.4f", protein_path, sigma, hd, r_comp, perc_t, feps
+    // Generate the path where the maps will be stored
+    const auto maps_path = Path::format_str(
+        "%s/maps/s%.4f_h%.4f_r%.4f_p%.4f_e%.4f", 
+        protein_path, sigma, denoise_param, r_env, perc_t, feps
     );
 
-    // Create the output path if needed
-    mkdir(out_path.c_str(), 0777);
+    // Generate the path where the log will be output
+    const auto log_path = Path::format_str(
+       "out/log/%s/s%.4f_h%.4f_r%.4f_p%.4f_e%.4f",
+       protein.c_str(), sigma, denoise_param, r_env, perc_t, feps
+    );
+
+    // Create the paths if needed
+    mkdir(maps_path.c_str(), 0777); 
+    mkdir(log_path.c_str(),  0777);
 
     // Save the noisy map in memory
-    original.save_map(Path::join_path(out_path, "noisy.map"));
+    original_map.save_map(Path::join_path(maps_path, "noisy.map"));
 
     // Save the denoised map in memory
-    denoised.save_map(Path::join_path(out_path, "denoised.map"));
-     
-    // Save the average for each environment in the noisy map
+    denoised_map.save_map(Path::join_path(maps_path, "denoised.map"));
+    
+    // Save the statistics of the environment in memory
     Utils::save_envstats(
-        Path::join_path(out_path, "stat_noisy.dat"), o_stats, original
+        Path::join_path(maps_path, "envstat_noisy.dat"), 
+        original_env_stats, original_map
     );
 
     // Save the average for each environment in the denoised map
     Utils::save_envstats(
-        Path::join_path(out_path, "stat_denoised.dat"), d_stats, original
+        Path::join_path(maps_path, "envstat_denoised.dat"), 
+        denoised_env_stats, denoised_map
     );
 
-    // Save the prefilter statistics into a file
-    Utils::save_stats(Path::join_path(out_path, "prefilter.dat"), prefilter);
+    // Save the monitor data into the log path
+    Utils::save_stats(Path::join_path(log_path, "monitor.dat"), monitor_data);
 
     // Output the value of h to capture it in the pipeline
-    std::cout << hd << std::endl;
+    std::cout << denoise_param << std::endl;
 
 return 0;
 }
