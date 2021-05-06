@@ -10,17 +10,22 @@
 # -- Obtain the base path where the code is located
 export BASE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 
-# -- Source some assertion functions
+# -- Source some assertion functions and the helper message
 source ${BASE_PATH}/scripts/shell/checks.sh
+source ${BASE_PATH}/scripts/shell/help.sh
 
-# -- Check that 
+if [[ ${1} == "help" ]]; then 
+    print_help; exit 0
+fi
+
+# -- Check that CCP4_PATH environment is available
 assert_var_exists "CCP4_PATH" ${CCP4_PATH}
 
 # -- Set some needed variables for the simulation
 PROTEIN=${1};               assert_var_exists "protein"   ${1}
 SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
 HPERC=$(printf %.4f ${3});  assert_var_exists "h_perc"    ${3}
-RCOMP=$(printf %.4f ${4});  assert_var_exists "r_compar"  ${4}
+R_ENV=$(printf %.4f ${4});  assert_var_exists "r_env"  ${4}
 PFEPS=$(printf %.4f ${5});  assert_var_exists "pref_eps"  ${5}
 
 # -- Directories to the scripts
@@ -47,7 +52,7 @@ header_message "Path to CCP4 software is ${CCP4_PATH}"
 header_message "Protein selected: ${PROTEIN}"
 header_message "Standard deviation of added noise: ${SIGMA}"
 header_message "Proportion used in denoising parameter: ${HPERC}"
-header_message "Radious of comparison: ${RCOMP} (A)"
+header_message "Radious used in environments: ${R_ENV} (A)"
 header_message "Prefiler epsilon: ${PFEPS}"
 
 # -- Create a .map file from the .mtz file
@@ -61,54 +66,53 @@ ${BUILD_MTZ} ${PROT_PATH}
 # -- Build the reference model from the .map file
 header_message "Building reference model from reference refmac.map"
 ${BUILD_MAP} refmac.map ${PROT_PATH} refmap
-  
-# -- Generate the noisy and denoised versions of the map
+
+  # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
-HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HPERC} ${RCOMP} ${PFEPS})
+HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HPERC} ${R_ENV} ${PFEPS})
 
 # -- Restrict the denoiser to 4 digits
 HDEN=$(printf %.4f ${HDEN})
-echo ${HDEN}
 
-# # -- Specific name of the simulation name
-# SIM_NAME="s${SIGMA}_h${HDEN}_r${RCOMP}_p${HPERC}_e${PFEPS}"
-# 
-# # -- Build a model for each processed map file
-# for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*.map); do
-# 
-#     # Basename of the file
-#     base=$(basename -- ${file})
-# 
-#     # Echo some data to the console
-#     header_message "Building model from map file ${base}"
-# 
-#     # Location of the map file inside ${PROT_PATH}
-#     MAP_LOC=maps/${SIM_NAME}/${base}
-# 
-#     # Output folder inside ./out
-#     OUT_PATH=${SIM_NAME}/${base/.map/}
-# 
-#     # Process the map with the correct script
-#     ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
-# done
-# 
-# # -- Obtain a log file from the protein data
-# header_message "Creating a log file from the processed pipeline"
-# python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
-# 
-# # -- Generate the plots from the log data
-# header_message "Generating log plots from the processed pipeline"
-# python3 ${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}
-# 
-# # -- Obtain the histogram plot from the data
-# header_message "Generating histogram plot from the processed pipeline"
-# python3 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
-# 
-# # -- Plot the table of averages from the data
-# header_message "Generating table of averages plots"
-# python3 ${TABLE_PLOT} ${PROT_PATH}/maps/${SIM_NAME} ${SIM_NAME} ./out/log/${PROTEIN}/${SIM_NAME}
-# 
-# # -- Convert all the png files into pdf files
-# for png_file in $(ls out/log/${PROTEIN}/${SIM_NAME}/*.png); do
-#     convert ${png_file} ${png_file/.png/.pdf}
-# done
+# -- Specific name of the simulation name
+SIM_NAME="s${SIGMA}_h${HDEN}_r${R_ENV}_p${HPERC}_e${PFEPS}"
+
+# -- Build a model for each processed map file
+for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*.map); do
+
+    # Basename of the file
+    base=$(basename -- ${file})
+
+    # Echo some data to the console
+    header_message "Building model from map file ${base}"
+
+    # Location of the map file inside ${PROT_PATH}
+    MAP_LOC=maps/${SIM_NAME}/${base}
+
+    # Output folder inside ./out
+    OUT_PATH=${SIM_NAME}/${base/.map/}
+
+    # Process the map with the correct script
+    ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
+done
+
+# -- Obtain a log file from the protein data
+header_message "Creating a log file from the processed pipeline"
+python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
+
+# -- Generate the plots from the log data
+header_message "Generating log plots from the processed pipeline"
+python3 ${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}
+
+# -- Obtain the histogram plot from the data
+header_message "Generating histogram plot from the processed pipeline"
+python3 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
+
+# -- Plot the table of averages from the data
+header_message "Generating table of averages plots"
+python3 ${TABLE_PLOT} ${PROT_PATH}/maps/${SIM_NAME} ${SIM_NAME} ./out/log/${PROTEIN}/${SIM_NAME}
+
+# -- Convert all the png files into pdf files
+for png_file in $(ls out/log/${PROTEIN}/${SIM_NAME}/*.png); do
+    convert ${png_file} ${png_file/.png/.pdf}
+done
