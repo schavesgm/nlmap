@@ -25,9 +25,7 @@ float Map::add_noise(const float& sigma, const bool& normalise)
     // Add gaussian noise with std sigma to the whole map
     
     // If the sigma value is zero, do not add any noise
-    if (sigma == 0) {
-        return sigma;
-    }
+    if (sigma == 0) return sigma;
 
     // Instantiate a random engine
     std::default_random_engine engine;
