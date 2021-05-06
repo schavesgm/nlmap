@@ -1,5 +1,18 @@
 #include <denoiser.hpp>
 
+// -- Inline function to get all octancts in a vector
+inline void get_octancts(vector<octanct>& vec, const octanct& pos, const int& p)
+{
+    // Calculate the corresponding octanct
+    const octanct b_oct = (p > 0) ? pos : 0b000;
+
+    // Append the value into the vector
+    vec.push_back(b_oct);
+
+    // If p is zero, then append the masked octanct as well
+    if (p == 0) vec.push_back(b_oct ^ pos);
+}
+
 // -- Indices whose distance to a central point is less than R_max {{{
 vector<grid_point> Denoiser::table_of_indices(Map& map, const float& r_comp) 
 {
@@ -21,43 +34,103 @@ vector<grid_point> Denoiser::table_of_indices(Map& map, const float& r_comp)
 vector<float> Denoiser::get_env(const Map& map, const int& u, const int& v, const int& w, const vector<grid_point>& indices)
 {
     // Vector that will contain the environment values separated into octancts
-    vector<float> raw_environment[Octanct::No];
+    vector<float> raw_env[Octanct::No];
 
-    // Get the map value for (u, v, w)
-    const float m_central = map.get_value(u, v, w);
+    // Vectors used to assign points to octancts
+    vector<octanct> u_oct, v_oct, w_oct;
 
     // Iterate for all points in the table
     for (auto& p : indices) {
 
-        // Obtain the right quadrant for the current point
-        const unsigned char bw = (p.w >= 0) ? 0b100 : 0b000;
-        const unsigned char bv = (p.v >= 0) ? 0b010 : 0b000;
-        const unsigned char bu = (p.u >= 0) ? 0b001 : 0b000;
+        // Obtain the right octancts in the u direction
+        get_octancts(u_oct, 0b001, p.u);
 
-        // Append the map value to the corresponding quadrant
-        raw_environment[(bw | bv | bu)].push_back(
-            map.get_value(p.u + u, p.v + v, p.w + w)
-        );
+        // Obtain the right octancts in the v direction
+        get_octancts(v_oct, 0b010, p.v);
+
+        // Obtain the right octancts in the w direction
+        get_octancts(w_oct, 0b100, p.w);
+
+        // Normalisation factor used to divide points among octancts
+        const int norm = u_oct.size() * v_oct.size() * w_oct.size();
+
+        // Append the normalised map value to the corresponding octancts
+        for (auto& ou : u_oct) {
+            for (auto& ov : v_oct) {
+                for (auto& ow : w_oct) {
+                    raw_env[(ow | ov | ou)].push_back(
+                        map.get_value(p.u + u, p.v + v, p.w + w) / norm
+                    );
+                }
+            }
+        }
+
+        // Clear the memory in all octanct vectors for next iteration
+        u_oct.clear(); v_oct.clear(); w_oct.clear();
     }
 
-    return avg_env(raw_environment);
+    // Calculate the average of the raw environment for each octanct
+    vector<float> env(Octanct::No);
+
+    for (octanct o = 0; o < Octanct::No; o++) {
+        // Calculate the sum of all point in the octanct
+        env[o] = std::accumulate(raw_env[o].begin(), raw_env[o].end(), 0.0f);
+
+        // Normalise by the number of points to obtain the average
+        env[o] = env[o] / raw_env[o].size();
+    }
+
+    return env;
 }
 // -- }}}
 
-// -- Compute the average of the raw environment for each octanct {{{
-vector<float> Denoiser::avg_env(const vector<float>* raw_environment) 
+// -- Get the average points per octanct {{{
+int Denoiser::avg_points_per_octanct(Map& map, const float& r_comp)
 {
-    // Generate the vector containing the average in each quadrant
-    vector<float> environment(Octanct::No);
+    // Obtain the table of indices
+    const auto indices = table_of_indices(map, r_comp);
 
-    for (octanct o = 0; o < Octanct::No; o++) {
-        // Calculate the average for each octanct adding the central
-        environment[o] = std::accumulate(
-            raw_environment[o].begin(), raw_environment[o].end(), 0.0f
-        ) / (raw_environment[o].size());
+    // Vectors that will contain the points
+    vector<int> count_env[Octanct::No];
+
+    // Vector that will contain the average of each octanct
+    vector<float> pp_oct(Octanct::No);
+
+    // Vectors used to assign points to quadrants
+    vector<octanct> u_oct, v_oct, w_oct;
+
+    // Iterate for all points in the table
+    for (auto& p : indices) {
+
+        // Obtain the right octancts in the u direction
+        get_octancts(u_oct, 0b001, p.u);
+
+        // Obtain the right octancts in the v direction
+        get_octancts(v_oct, 0b010, p.v);
+
+        // Obtain the right octancts in the w direction
+        get_octancts(w_oct, 0b100, p.w);
+
+        // Add one count to each relevant quadrant
+        for (auto& ou : u_oct) {
+            for (auto& ov : v_oct) {
+                for (auto& ow : w_oct) {
+                    // Add one point to the correct octancts
+                    count_env[(ow | ov | ou)].push_back(1);
+                }
+            }
+        }
+
+        // Clear the vectors for the next iteration
+        u_oct.clear(); v_oct.clear(); w_oct.clear();
     }
 
-    return environment;
+    // Get the number of points per octanct
+    for (octanct o = 0; o < Octanct::No; o++) {
+        pp_oct[o] = count_env[o].size();
+    }
+
+    return std::accumulate(pp_oct.begin(), pp_oct.end(), 0) / Octanct::No;
 }
 // -- }}}
 
@@ -84,6 +157,9 @@ float* Denoiser::table_of_envs(Map& map, const float& r_comp)
 
                 // Append the quadrant to the table
                 const auto env = get_env(map, u, v, w, indices);
+
+                for (auto& oct_val : env) { std::cout << oct_val << " "; }
+                std::cout << std::endl;
 
                 // Temporary that will contain the average of the environment
                 float env_avg = 0.0f;
@@ -246,92 +322,96 @@ std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
     const float hd  = p_thresh * (*max - *min);
     const float den = 2 * hd * hd;
 
-    // Iterate for each reference environment in the grid
-    for (int er = 0; er < Ne; er++) {
+    // Get the average number of points in each octanct
+    const float points_per_oct = avg_points_per_octanct(map, r_comp);
 
-        // Append the central value with maximum weight
-        denoised_M[er] += 1.0f * original_M[er];
+    // // Iterate for each reference environment in the grid
+    // for (int er = 0; er < Ne; er++) {
 
-        // References to the reference environment avg and std
-        const float& rA = envs[er * Nv + No];
+    //     // Append the central value with maximum weight
+    //     denoised_M[er] += 1.0f * original_M[er];
 
-        // The prefilter is passed when comparing reference with reference
-        prefilter_passed[er] += 1;
+    //     // References to the reference environment avg and std
+    //     const float& rA = envs[er * Nv + No];
 
-        // Iterate for all comparision environments without repetition
-        for (int ec = er + 1; ec < Ne; ec++) {
+    //     // The prefilter is passed when comparing reference with reference
+    //     prefilter_passed[er] += 1;
 
-            // References to the comparison environment avg and std
-            const float& cA = envs[ec * Nv + No];
+    //     // Iterate for all comparision environments without repetition
+    //     for (int ec = er + 1; ec < Ne; ec++) {
 
-            // Compute the difference for averages and deviations
-            const float dA = rA - cA;
+    //         // References to the comparison environment avg and std
+    //         const float& cA = envs[ec * Nv + No];
 
-            // Filter to enhance performance of the denoiser
-            if (std::abs(dA) < eps * hd) {
+    //         // Compute the difference for averages and deviations
+    //         const float dA = rA - cA;
 
-                // Variable containing the minimum distance squared
-                float min_dsq = 1000000000;
+    //         // Filter to enhance performance of the denoiser
+    //         if (std::abs(dA) < eps * hd) {
 
-                // Compare both environments using all possible rotations
-                for (int r = 0; r < Nr; r++) {
+    //             // Variable containing the minimum distance squared
+    //             float min_dsq = 1000000000;
 
-                    // Temporary containing the distance squared for this rot
-                    float d_sq = 0.0f;
+    //             // Compare both environments using all possible rotations
+    //             for (int r = 0; r < Nr; r++) {
 
-                    // Iterate over all octancts
-                    for (octanct o = 0; o < No; o++) {
+    //                 // Temporary containing the distance squared for this rot
+    //                 float d_sq = 0.0f;
 
-                        // Access the current environment
-                        const float& refr = envs[er * Nv + rots[r * No + o]];
-                        const float& comp = envs[ec * Nv + o];
+    //                 // Iterate over all octancts
+    //                 for (octanct o = 0; o < No; o++) {
 
-                        // Update the distance squared with the current value
-                        d_sq += std::pow(refr - comp, 2);
-                    }
+    //                     // Access the current environment
+    //                     const float& refr = envs[er * Nv + rots[r * No + o]];
+    //                     const float& comp = envs[ec * Nv + o];
 
-                    // Normalise the distance squared
-                    d_sq = d_sq / No;
+    //                     // Update the distance squared with the current value
+    //                     d_sq += std::pow(refr - comp, 2);
+    //                 }
 
-                    // Update the minimum distance
-                    min_dsq = (min_dsq > d_sq) ? d_sq : min_dsq;
-                }
+    //                 // Normalise the distance squared
+    //                 d_sq = d_sq / No;
 
-                // Compute the kernel for the current comparison
-                const float kernel = std::exp(- min_dsq / den);
+    //                 // Update the minimum distance
+    //                 min_dsq = (min_dsq > d_sq) ? d_sq : min_dsq;
+    //             }
 
-                // Update the map value with the weighted sum
-                denoised_M[er] += kernel * original_M[ec];
-                denoised_M[ec] += kernel * original_M[er];
+    //             // Compute the kernel for the current comparison
+    //             const float kernel = std::exp(- min_dsq / den);
 
-                // Update the sum of kernels for each
-                sum_kernels[er] += kernel;
-                sum_kernels[ec] += kernel;
+    //             // Update the map value with the weighted sum
+    //             denoised_M[er] += kernel * original_M[ec];
+    //             denoised_M[ec] += kernel * original_M[er];
 
-                // The prefilter is passed both for the reference and comparison env
-                prefilter_passed[er] += 1;
-                prefilter_passed[ec] += 1;
+    //             // Update the sum of kernels for each
+    //             sum_kernels[er] += kernel;
+    //             sum_kernels[ec] += kernel;
 
-            } // -- End of prefilter
-        } // -- End of comparison environment
+    //             // The prefilter is passed both for the reference and comparison env
+    //             prefilter_passed[er] += 1;
+    //             prefilter_passed[ec] += 1;
 
-        // Denoise the value by computing the weighted average
-        denoised_M[er] /= (sum_kernels[er] + 1.0f);
+    //         } // -- End of prefilter
+    //     } // -- End of comparison environment
 
-    } // -- End of main loop
+    //     // Denoise the value by computing the weighted average
+    //     denoised_M[er] /= (sum_kernels[er] + 1.0f);
 
-    // Normalise the prefilter with the number of examples
-    for (int e = 0; e < Ne; e++) { prefilter_passed[e] /= Ne; }
+    // } // -- End of main loop
+
+    // // Normalise the prefilter with the number of examples
+    // for (int e = 0; e < Ne; e++) { prefilter_passed[e] /= Ne; }
 
     // Calculate some statistics of the prefilter
-    std::vector<float> prefilter_stats(6);
+    std::vector<float> run_stats(6);
 
-    prefilter_stats[0] = Stats::mean(prefilter_passed, Ne);
-    prefilter_stats[1] = Stats::std(prefilter_passed, Ne);
-    prefilter_stats[2] = Stats::median(prefilter_passed, Ne);
-    prefilter_stats[3] = Stats::max(prefilter_passed, Ne);
-    prefilter_stats[4] = Stats::min(prefilter_passed, Ne);
-    prefilter_stats[5] = Ne;
+    run_stats[0] = Stats::mean(prefilter_passed, Ne);
+    run_stats[1] = Stats::std(prefilter_passed, Ne);
+    run_stats[2] = Stats::median(prefilter_passed, Ne);
+    run_stats[3] = Stats::max(prefilter_passed, Ne);
+    run_stats[4] = Stats::min(prefilter_passed, Ne);
+    run_stats[5] = Ne;
+    run_stats[7] = points_per_oct;
 
     // Delete the heap allocated data
     delete[] envs;
@@ -340,6 +420,6 @@ std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
     delete[] prefilter_passed;
 
     // Return a tuple containing the denoised map and the denoised parameter
-    return std::make_tuple(denoised_map, hd, env_avg, prefilter_stats);
+    return std::make_tuple(denoised_map, hd, env_avg, run_stats);
 }
 // -- }}}

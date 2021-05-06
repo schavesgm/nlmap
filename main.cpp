@@ -69,7 +69,7 @@ int main(const int argc, const char** argv)
     );
 
     // Save the prefilter statistics into a file
-    Utils::save_prefilter(Path::join_path(out_path, "prefilter.dat"), prefilter);
+    Utils::save_stats(Path::join_path(out_path, "prefilter.dat"), prefilter);
 
     // Output the value of h to capture it in the pipeline
     std::cout << hd << std::endl;

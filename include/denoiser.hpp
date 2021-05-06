@@ -38,7 +38,7 @@ namespace Denoiser
 
     // -- Construct the environment around each point {{{
     vector<float> get_env(const Map&, const int&, const int&, const int&, const vector<grid_point>&);
-    vector<float> avg_env(const vector<float>*);
+    int avg_points_per_octanct(Map&, const float&);
     // -- }}}
 
     // -- Construct a table containing the average of each environment {{{

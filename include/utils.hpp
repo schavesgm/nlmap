@@ -12,7 +12,7 @@ namespace Utils
 
     // -- Save the prefilter statistics in a file
     template <typename T>
-    void save_prefilter(const T, const std::vector<float>&);
+    void save_stats(const T, const std::vector<float>&);
 };
 
 template <typename T>
@@ -43,7 +43,7 @@ void Utils::save_envstats(
 }
 
 template <typename T>
-void Utils::save_prefilter(const T path, const std::vector<float>& stats)
+void Utils::save_stats(const T path, const std::vector<float>& stats)
 {
     // Open an stream to flush the data
     std::ofstream stream;
@@ -60,6 +60,7 @@ void Utils::save_prefilter(const T path, const std::vector<float>& stats)
         stream << stats[3] << " # Max\n";
         stream << stats[4] << " # Min\n";
         stream << stats[5] << " # Number of points\n";
+        stream << stats[6] << " # Average points per octanct\n";
     }
 
     // Close the stream

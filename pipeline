@@ -4,8 +4,7 @@
 # -- make_map.sh path_to_protein_data
 # -- build_from_mtz.sh path_to_protein_data (overwrite_flag)
 # -- build_from_map.sh map_file path_to_protein_data out_name
-# -- json_log.py path_to_out_protein
-# -- plot_histogram.py simulation_name path_to_protein_data path_to_out_log
+# -- json_log.py path_to_out_protein # -- plot_histogram.py simulation_name path_to_protein_data path_to_out_log
 # -- plot_table_of_avg.py path_to_map simulation_name out_path
 
 # -- Obtain the base path where the code is located
@@ -69,46 +68,47 @@ HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HPERC} ${RCOM
 
 # -- Restrict the denoiser to 4 digits
 HDEN=$(printf %.4f ${HDEN})
+echo ${HDEN}
 
-# -- Specific name of the simulation name
-SIM_NAME="s${SIGMA}_h${HDEN}_r${RCOMP}_p${HPERC}_e${PFEPS}"
- 
-# -- Build a model for each processed map file
-for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*.map); do
-
-    # Basename of the file
-    base=$(basename -- ${file})
-
-    # Echo some data to the console
-    header_message "Building model from map file ${base}"
-
-    # Location of the map file inside ${PROT_PATH}
-    MAP_LOC=maps/${SIM_NAME}/${base}
-
-    # Output folder inside ./out
-    OUT_PATH=${SIM_NAME}/${base/.map/}
-
-    # Process the map with the correct script
-    ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
-done
-
-# -- Obtain a log file from the protein data
-header_message "Creating a log file from the processed pipeline"
-python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
-
-# -- Generate the plots from the log data
-header_message "Generating log plots from the processed pipeline"
-python3 ${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}
-
-# -- Obtain the histogram plot from the data
-header_message "Generating histogram plot from the processed pipeline"
-python3 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
-
-# -- Plot the table of averages from the data
-header_message "Generating table of averages plots"
-python3 ${TABLE_PLOT} ${PROT_PATH}/maps/${SIM_NAME} ${SIM_NAME} ./out/log/${PROTEIN}/${SIM_NAME}
-
-# -- Convert all the png files into pdf files
-for png_file in $(ls out/log/${PROTEIN}/${SIM_NAME}/*.png); do
-    convert ${png_file} ${png_file/.png/.pdf}
-done
+# # -- Specific name of the simulation name
+# SIM_NAME="s${SIGMA}_h${HDEN}_r${RCOMP}_p${HPERC}_e${PFEPS}"
+# 
+# # -- Build a model for each processed map file
+# for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*.map); do
+# 
+#     # Basename of the file
+#     base=$(basename -- ${file})
+# 
+#     # Echo some data to the console
+#     header_message "Building model from map file ${base}"
+# 
+#     # Location of the map file inside ${PROT_PATH}
+#     MAP_LOC=maps/${SIM_NAME}/${base}
+# 
+#     # Output folder inside ./out
+#     OUT_PATH=${SIM_NAME}/${base/.map/}
+# 
+#     # Process the map with the correct script
+#     ${BUILD_MAP} ${MAP_LOC} ${PROT_PATH} ${OUT_PATH} "overwrite"
+# done
+# 
+# # -- Obtain a log file from the protein data
+# header_message "Creating a log file from the processed pipeline"
+# python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
+# 
+# # -- Generate the plots from the log data
+# header_message "Generating log plots from the processed pipeline"
+# python3 ${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}
+# 
+# # -- Obtain the histogram plot from the data
+# header_message "Generating histogram plot from the processed pipeline"
+# python3 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
+# 
+# # -- Plot the table of averages from the data
+# header_message "Generating table of averages plots"
+# python3 ${TABLE_PLOT} ${PROT_PATH}/maps/${SIM_NAME} ${SIM_NAME} ./out/log/${PROTEIN}/${SIM_NAME}
+# 
+# # -- Convert all the png files into pdf files
+# for png_file in $(ls out/log/${PROTEIN}/${SIM_NAME}/*.png); do
+#     convert ${png_file} ${png_file/.png/.pdf}
+# done
