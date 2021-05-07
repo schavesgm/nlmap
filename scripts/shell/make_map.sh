@@ -8,14 +8,14 @@ source ${CCP4_PATH}/bin/ccp4.setup-sh
 source ${BASE_PATH}/scripts/shell/checks.sh
 
 # -- Retrieve some command line information
-PROT_PATH=${1}; PROTEIN=$(basename ${PROT_PATH})
+PROT_PATH=${1}; PROTEIN=$(basename ${PROT_PATH}); MAP_FILE=${2}
 
 # -- Assert the file extension is correct
 assert_dir_exists ${PROT_PATH}
 assert_dir_exists ${PROT_PATH}/maps
 
 # -- Name of the mtz file and corresponding map file
-MTZ_FILE="refmac.mtz"; MAP_FILE="refmac.map"
+MTZ_FILE="refmac.mtz"; 
 
 # -- Path of input file and output files
 INP_PATH=${PROT_PATH}/${MTZ_FILE}
