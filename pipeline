@@ -1,10 +1,11 @@
 #!/bin/bash
 
 # ** Usage of each script
-# -- make_map.sh path_to_protein_data
+# -- make_map.sh path_to_protein_data name_of_map
 # -- build_from_mtz.sh path_to_protein_data (overwrite_flag)
 # -- build_from_map.sh map_file path_to_protein_data out_name
-# -- json_log.py path_to_out_protein # -- plot_histogram.py simulation_name path_to_protein_data path_to_out_log
+# -- json_log.py path_to_out_protein 
+# -- plot_histogram.py simulation_name path_to_protein_data path_to_out_log
 # -- plot_table_of_avg.py path_to_map simulation_name out_path
 
 # -- Obtain the base path where the code is located
@@ -55,9 +56,13 @@ header_message "Proportion used in denoising parameter: ${HPERC}"
 header_message "Radious used in environments: ${R_ENV} (A)"
 header_message "Prefiler epsilon: ${PFEPS}"
 
+# -- Generate a variable containing the specific map file for this run
+MAP_FILE=refmac_${RANDOM}_${HPERC}.map
+
 # -- Create a .map file from the .mtz file
 header_message "Creating .map file from .mtz (${PROT_PATH}/refmac.mtz)"
-${MAKE_MAP} ${PROT_PATH}
+${MAKE_MAP} ${PROT_PATH} refmac.map
+${MAKE_MAP} ${PROT_PATH} ${MAP_FILE}
 
 # -- Build the reference model from the .mtz file
 header_message "Building reference model from reference refmac.mtz"
@@ -67,11 +72,14 @@ ${BUILD_MTZ} ${PROT_PATH}
 header_message "Building reference model from reference refmac.map"
 ${BUILD_MAP} refmac.map ${PROT_PATH} refmap
 
-  # -- Generate the noisy and denoised versions of the map
+# -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
-HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} refmac.map ${SIGMA} ${HPERC} ${R_ENV} ${PFEPS})
+HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} ${MAP_FILE} ${SIGMA} ${HPERC} ${R_ENV} ${PFEPS})
 
-# -- Restrict the denoiser to 4 digits
+# -- Remove the copied original map, as it is not needed anymore
+rm ${PROT_PATH}/${MAP_FILE}
+
+# -- Restrict the denoiser parameter to 4 digits
 HDEN=$(printf %.4f ${HDEN})
 
 # -- Specific name of the simulation name
