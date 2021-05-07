@@ -105,19 +105,19 @@ for file in $(ls ${PROT_PATH}/maps/${SIM_NAME}/*.map); do
 done
 
 # -- Obtain a log file from the protein data
-header_message "Creating a log file from the processed pipeline"
+header_message "Creating a log file for ${PROTEIN}: ${SIM_NAME}"
 python3 ${JSON_LOG} $(pwd)/out/${PROTEIN} ${SIM_NAME}
 
 # -- Generate the plots from the log data
-header_message "Generating log plots from the processed pipeline"
+header_message "Generating log plots for ${PROTEIN}: ${SIM_NAME}"
 python3 ${LOG_PLOT} ./out/log/${PROTEIN}/${SIM_NAME}
 
 # -- Obtain the histogram plot from the data
-header_message "Generating histogram plot from the processed pipeline"
+header_message "Generating histogram plot for ${PROTEIN}: ${SIM_NAME}"
 python3 ${HIST_PLOT} ${SIM_NAME} ${PROT_PATH} ./out/log/${PROTEIN}/${SIM_NAME}
 
 # -- Plot the table of averages from the data
-header_message "Generating table of averages plots"
+header_message "Generating environment average plots for ${PROTEIN}: ${SIM_NAME}"
 python3 ${TABLE_PLOT} ${PROT_PATH}/maps/${SIM_NAME} ${SIM_NAME} ./out/log/${PROTEIN}/${SIM_NAME}
 
 # -- Convert all the png files into pdf files
