@@ -52,6 +52,8 @@ def plot_parameters(log_path):
     axis_Rw.set_ylabel('Rw');      axis_Rf.set_ylabel('Rf')
     axis_Rw.grid(True, color = '#cccccc'); 
     axis_Rf.grid(True, color = '#cccccc')
+    axis_Rw.set_ylim(0.2, 0.4)
+    axis_Rf.set_ylim(0.2, 0.4)
 
     # Set the title in the plot
     title = '{} ({} -- {}).  s = {}, h = {}, p = {}, r = {} (A), e = {}'

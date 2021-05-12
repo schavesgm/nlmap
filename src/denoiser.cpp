@@ -339,7 +339,7 @@ std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
         // Append the central value with maximum weight
         denoised_M[er] += 1.0f * original_M[er];
 
-        // References to the reference environment avg and std
+        // Reference to the reference environment avg
         const float& rA = envs[er * Nv + No];
 
         // The prefilter is passed when comparing reference with reference
@@ -348,14 +348,11 @@ std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
         // Iterate for all comparision environments without repetition
         for (int ec = er + 1; ec < Ne; ec++) {
 
-            // References to the comparison environment avg and std
+            // References to the comparison environment avg
             const float& cA = envs[ec * Nv + No];
 
-            // Compute the difference for averages and deviations
-            const float dA = rA - cA;
-
             // Filter to enhance performance of the denoiser
-            if (std::abs(dA) < eps * hd) {
+            if (std::abs(rA - cA) < eps * hd) {
 
                 // Variable containing the minimum distance squared
                 float min_dsq = 1000000000;
@@ -369,12 +366,12 @@ std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
                     // Iterate over all octancts
                     for (octanct o = 0; o < No; o++) {
 
-                        // Access the current environment
-                        const float& refr = envs[er * Nv + rots[r * No + o]];
-                        const float& comp = envs[ec * Nv + o];
+                        // Access the current octanct for each environment
+                        const float& oct_refr = envs[er * Nv + rots[r * No + o]];
+                        const float& oct_comp = envs[ec * Nv + o];
 
                         // Update the distance squared with the current value
-                        d_sq += std::pow(refr - comp, 2);
+                        d_sq += std::pow(oct_refr - oct_comp, 2);
                     }
 
                     // Normalise the distance squared
