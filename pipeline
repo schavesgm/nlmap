@@ -39,8 +39,6 @@ PLOT_BUCC=${BASE_PATH}/scripts/python/plot_bucc/plot_bucc.py
 PLOT_HIST=${BASE_PATH}/scripts/python/plot_hists/plot_hists.py
 PLOT_STAT=${BASE_PATH}/scripts/python/plot_envstats/plot_envstats.py
 
-# TABLE_PLOT="${BASE_PATH}/scripts/python/plot_table_of_avg/plot_table_of_avg.py"
-
 # -- Name of the protein to process
 DATA_PATH="$(pwd)/data"; PROT_PATH="${DATA_PATH}/${PROTEIN}"
 
