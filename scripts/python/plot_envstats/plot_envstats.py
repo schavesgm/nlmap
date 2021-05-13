@@ -95,8 +95,8 @@ if __name__ == '__main__':
     protein, sim_name = sys.argv[1:]
 
     # Get the path to the data and log
-    path_to_data = f'./out/data/{protein}/{sim_name}'
-    path_to_log  = f'./out/log/{protein}/{sim_name}'
+    path_to_data = './out/data/{}/{}'.format(protein, sim_name)
+    path_to_log  = './out/log/{}/{}'.format(protein, sim_name)
 
     # Get some properties from the path
     matches = regex.match(SIMULATION_FORMAT, sim_name)

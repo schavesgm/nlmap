@@ -11,7 +11,7 @@ if __name__ == '__main__':
     protein, sim_name = sys.argv[1:]
 
     # Generate the path to the log file
-    path_to_log = f'./out/log/{protein}/{sim_name}'
+    path_to_log = './out/log/{}/{}'.format(protein, sim_name)
 
     # Plot the parameters form the log file
     plot_parameters(path_to_log)

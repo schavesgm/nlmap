@@ -10,8 +10,8 @@ if __name__ == '__main__':
     protein, sim_name = sys.argv[1:]
 
     # Generate the path to the log
-    path_to_out_data = f'./out/data/{protein}/{sim_name}'
-    path_to_out_log  = f'./out/log/{protein}/{sim_name}'
+    path_to_out_data = './out/data/{}/{}'.format(protein, sim_name)
+    path_to_out_log  = './out/log/{}/{}'.format(protein, sim_name)
     
     # Some sanity checks
     assert os.path.exists(path_to_out_data)
