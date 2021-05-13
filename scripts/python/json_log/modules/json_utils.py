@@ -12,7 +12,7 @@ from .parse_utils import parse_map
 __all__ = ['pipeline_JSON']
 
 # Simulation name string format
-SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)_e(\d+.\d+)'
+SIMULATION_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)_e(\d+.\d+)'
 
 # Custom JSON encoder and container to serialise data {{{
 class InlineList:
@@ -123,39 +123,39 @@ def get_other_maps(path_to_protein):
     return [os.path.join(path_to_protein, f) for f in ls if fmap(f)]
 
 # Dump all the data from a protein folder into a log file {{{
-def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
-    
-    # Create out dir if it is not created
-    os.makedirs(out_dir) if not os.path.exists(out_dir) else False
+def JSON_pipeline(path_to_out_data, path_to_out_log):
 
-    # Generate some needed variables
-    refmtz_path = os.path.join(path_out_protein, 'refmtz')
-    refmap_path = os.path.join(path_out_protein, 'refmap')
-    promap_path = os.path.join(path_out_protein, simulation_name)
+    # Generate the paths to the different maps
+    path_to_refmtz   = os.path.join(path_to_out_data, 'refmtz')
+    path_to_refmap   = os.path.join(path_to_out_data, 'refmap')
+    path_to_noisy    = os.path.join(path_to_out_data, 'noisy')
+    path_to_denoised = os.path.join(path_to_out_data, 'denoised')
 
-    # Some needed assertions
-    assert os.path.exists(refmtz_path)
-    assert os.path.exists(refmap_path)
-    assert os.path.exists(promap_path)
+    # Some needed assertions before continuing
+    assert os.path.exists(path_to_refmtz)
+    assert os.path.exists(path_to_refmap)
+    assert os.path.exists(path_to_noisy)
+    assert os.path.exists(path_to_denoised)
 
-    # Obtain all the other directories in the folder
-    other_maps = os.listdir(os.path.join(path_out_protein, simulation_name))
-    other_maps = sorted(other_maps, key = str.lower)
+    # Get the current protein
+    protein = os.path.basename(os.path.dirname(path_to_out_data))
 
-    # Save the protein name after assertions
-    protein = os.path.basename(path_out_protein)
+    # Get the current simulation name
+    sim_name = os.path.basename(path_to_out_data)
 
     # Match some information in the simulation name
-    matches = regex.match(SIM_FORMAT, simulation_name)
+    matches = regex.match(SIMULATION_FORMAT, sim_name)
 
     # Parse the data from the reference builds
-    refmtz = parse_refmtz(os.path.join(refmtz_path, 'log'))
-    refmap = parse_map(os.path.join(refmap_path, 'log'))
+    refmtz   = parse_refmtz(os.path.join(path_to_refmtz, 'log'))
+    refmap   = parse_map(os.path.join(path_to_refmap, 'log'))
+    noisy    = parse_map(os.path.join(path_to_noisy, 'log'))
+    denoised = parse_map(os.path.join(path_to_denoised, 'log'))
 
     # Dictionary containing the JSON output
     json_out = OrderedDict()
     
-    # Add the data to the dictionary
+    # Add the data to the dictionary in order
     json_out['protein']      = protein
     json_out['space_group']  = refmtz['spgroup']
     json_out['resolution']   = refmtz['resrange']
@@ -165,31 +165,20 @@ def pipeline_JSON(path_out_protein, simulation_name, out_dir = './'):
     json_out['h_proportion'] = float(matches.group(4))
     json_out['pref_eps']     = float(matches.group(5))
 
-    # Add the builds to the dictionary
+    # Add a dictionary where the builds will be stored
     json_out['builds'] = OrderedDict()
-    json_out['builds']['refmtz'] = dump_refmtz(refmtz)
-    json_out['builds']['refmap'] = dump_map(refmap)
 
-    # Add the other maps to the content reference
-    for processed_map in other_maps:
-
-        # Generate the key for the given map
-        key = os.path.basename(processed_map)
-
-        # Path to processed map
-        map_path = os.path.join(promap_path, processed_map)
-
-        # Parse the data from the given map
-        content = parse_map(os.path.join(map_path, 'log'))
-
-        # Dump the content in the correct format
-        json_out['builds'][key] = dump_map(content)
+    # Dump some results into the builds
+    json_out['builds']['refmtz']   = dump_refmtz(refmtz)
+    json_out['builds']['refmap']   = dump_map(refmap)
+    json_out['builds']['noisy']    = dump_map(noisy)
+    json_out['builds']['denoised'] = dump_map(noisy)
 
     # Path to the output file
-    OUT_PATH = os.path.join(out_dir, '{}_log.json'.format(protein))
+    path_to_out_json = os.path.join(path_to_out_log, '{}_log.json'.format(protein))
 
     # Dump the JSON file into a dictionary
-    with open(OUT_PATH, 'w') as f:
+    with open(path_to_out_json, 'w') as f:
 
         # Generate the JSON encoded dictionary
         b = json.dumps(json_out, cls = CustomEncoder, indent = 4)

@@ -1,3 +1,15 @@
+function copy_files()
+{
+    # -- Retrieve the needed input and output paths
+    PROT_PATH=${1}; OUT_PATH=${2}
+
+    # -- Copy the files into the location
+    cp ${PROT_PATH}/dataset.mtz  ${OUT_PATH}
+    cp ${PROT_PATH}/refmac.mtz   ${OUT_PATH}
+    cp ${PROT_PATH}/refmac.pdb   ${OUT_PATH}
+    cp ${PROT_PATH}/sequence.seq ${OUT_PATH}
+}
+
 function print_help()
 {
     printf " -- pipeline script\n"

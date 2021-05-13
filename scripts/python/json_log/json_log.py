@@ -1,24 +1,25 @@
 #!/bin/python3
-
 import sys, os
-from modules import pipeline_JSON
+
+# Import some user defined modules
+from modules import JSON_pipeline
 
 if __name__ == '__main__':
 
     # Obtain the protein name
-    path_to_out_protein = sys.argv[1]
+    protein, sim_name = sys.argv[1:]
 
-    # Obtain the name of the simulation
-    simulation_name = sys.argv[2]
-
-    # Create the log file 
-    path_to_log = os.path.join(
-        os.path.dirname(path_to_out_protein), 'log',
-        os.path.basename(path_to_out_protein), simulation_name
-    )
+    # Generate the path to the log
+    path_to_out_data = f'./out/data/{protein}/{sim_name}'
+    path_to_out_log  = f'./out/log/{protein}/{sim_name}'
+    
+    # Some sanity checks
+    assert os.path.exists(path_to_out_data)
+    assert os.path.exists(path_to_out_log)
 
     # Create the folder to the log file if it does not exist
-    if not os.path.exists(path_to_log): os.makedirs(path_to_log)
+    if not os.path.exists(path_to_out_log): 
+        os.makedirs(path_to_out_log)
 
     # Generate the json log from the protein provided
-    pipeline_JSON(path_to_out_protein, simulation_name, path_to_log)
+    JSON_pipeline(path_to_out_data, path_to_out_log)

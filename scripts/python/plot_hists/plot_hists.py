@@ -9,38 +9,36 @@ import matplotlib.pyplot as plt
 from modules import Histomap
 
 # Simulation name string format
-SIM_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)'
+SIMULATION_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)'
 
 if __name__ == '__main__':
 
     # Name of the current simulation
-    sim_name = sys.argv[1]
-    
-    # Get the path to the protein
-    path_to_protein = sys.argv[2]
+    protein, sim_name = sys.argv[1:]
 
-    # Out folder where the plot will be stored
-    out_path = sys.argv[3]
+    # Path to log output and data
+    path_to_data = f'./out/data/{protein}/{sim_name}'
+    path_to_log  = f'./out/log/{protein}/{sim_name}'
 
-    # Path to maps
-    path_to_maps = os.path.join(path_to_protein, 'maps', sim_name)
+    # Assert the existence of the paths
+    assert os.path.exists(path_to_data)
+    assert os.path.exists(path_to_log)
 
-    # Assert some conditions on the paths
-    assert os.path.exists(path_to_protein)
-    assert os.path.exists(path_to_maps)
-    
-    # Get the correct builds
-    map_paths = [
-        os.path.join(path_to_protein, 'refmac.map'), 
-        os.path.join(path_to_maps, 'noisy.map'), 
-        os.path.join(path_to_maps, 'denoised.map')
+    # Get the path to all needed maps
+    path_to_maps = [
+        os.path.join(path_to_data, 'refmap/files/refmac.map'),
+        os.path.join(path_to_data, 'noisy/files/noisy.map'),
+        os.path.join(path_to_data, 'denoised/files/denoised.map')
     ]
-    
+
+    # Assert the existence of the wanted files
+    assert all(os.path.exists(p) for p in path_to_maps)
+
     # Figure that will contain all the plots
     fig = plt.figure(figsize = (14, 10))
 
     # Match the simulation data from the simulation name
-    matches = regex.match(SIM_FORMAT, sim_name)
+    matches = regex.match(SIMULATION_FORMAT, sim_name)
     
     # Add the simulation name as supertitle
     fig.suptitle(
@@ -50,7 +48,7 @@ if __name__ == '__main__':
     )
 
     # Iterate over all possible map files
-    for m, map_path in enumerate(map_paths, 1):
+    for m, map_path in enumerate(path_to_maps, 1):
     
         # Generate a Histomap object with the map file
         histomap = Histomap(map_path)
@@ -78,4 +76,5 @@ if __name__ == '__main__':
         wspace = 0.25, hspace = 0.2,
     )
 
-    fig.savefig(os.path.join(out_path, 'histogram'))
+    # Save the plot into the correct file
+    fig.savefig(os.path.join(path_to_log, 'histogram'))

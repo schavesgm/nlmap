@@ -1,9 +1,13 @@
+#!/bin/python3
 import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
 import matplotlib.pyplot as plt
 import regex, os, sys
+
+# Simulation regex
+SIMULATION_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)_e(\d+.\d+)'
 
 def eliminate_mirror_axis(axis):
     ''' Eliminate mirror axis from an axis plot. '''
@@ -87,18 +91,24 @@ class AvgTable:
 
 if __name__ == '__main__':
 
-    # Simulation regex
-    SIM_REGEX = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)_e(\d+.\d+)'
-
     # Get the path to the files and the simulation name
-    path_to_tables, sim_name, out_path = sys.argv[1:4]
+    protein, sim_name = sys.argv[1:]
+
+    # Get the path to the data and log
+    path_to_data = f'./out/data/{protein}/{sim_name}'
+    path_to_log  = f'./out/log/{protein}/{sim_name}'
 
     # Get some properties from the path
-    matches = regex.match(SIM_REGEX, sim_name)
+    matches = regex.match(SIMULATION_FORMAT, sim_name)
 
-    # Get the data from the path
-    ls_files = [f for f in os.listdir(path_to_tables) if 'envstat' in f]
-    ls_files = sorted(ls_files, key = lambda x: 0 if 'noisy' in x else 1)
+    # Get the noisy and denoised statistics
+    path_to_files = [
+        os.path.join(path_to_data, 'noisy/log/envstats.dat'),
+        os.path.join(path_to_data, 'denoised/log/envstats.dat')
+    ]
+
+    # Assert the existence of the files
+    assert all(os.path.exists(f) for f in path_to_files)
 
     # Generate a figure to plot the data
     fig = plt.figure(figsize = (14, 10))
@@ -109,13 +119,13 @@ if __name__ == '__main__':
         [fig.add_subplot(2, 2, 3), fig.add_subplot(2, 2, 4)]
     ]
     
-    for i, table_file in enumerate(ls_files):
+    for i, path_to_envstat in enumerate(path_to_files):
 
         # Generate an object to deal with the table data
-        table_avg = AvgTable(os.path.join(path_to_tables, table_file))
+        envstat = AvgTable(path_to_envstat)
 
         # Plot the data for each table
-        table_avg.plot_avg_env(axis[i])
+        envstat.plot_avg_env(axis[i])
 
     # Get the correct handles for the labels
     handles, labels = axis[0][0].get_legend_handles_labels()
@@ -127,10 +137,7 @@ if __name__ == '__main__':
         bbox_to_anchor = (0, 0.95, 1, 0)
     )
 
-    fig.subplots_adjust(
-        left = 0.1, right = 0.9,
-        wspace = 0.25, hspace = 0.2,
-    )
+    fig.subplots_adjust(left = 0.1, right = 0.9, wspace = 0.25, hspace = 0.2)
 
     # Add the title to the data
     fig.suptitle(
@@ -142,4 +149,4 @@ if __name__ == '__main__':
     )
 
     plt.close()
-    fig.savefig(os.path.join(out_path, 'envavg_plot'))
+    fig.savefig(os.path.join(path_to_log, 'envavg'))
