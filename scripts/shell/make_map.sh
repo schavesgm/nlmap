@@ -12,7 +12,6 @@ PROT_PATH=${1}; PROTEIN=$(basename ${PROT_PATH}); MAP_FILE=${2}
 
 # -- Assert the file extension is correct
 assert_dir_exists ${PROT_PATH}
-assert_dir_exists ${PROT_PATH}/maps
 
 # -- Name of the mtz file and corresponding map file
 MTZ_FILE="refmac.mtz"; 
