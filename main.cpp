@@ -3,6 +3,7 @@
 #include <sys/types.h> 
 #include <string>
 #include <tuple>
+#include <filesystem>
 
 // User defined modules
 #include <Map.hpp>
@@ -10,6 +11,8 @@
 #include <denoiser.hpp>
 #include <utils.hpp>
 #include <stats.hpp>
+
+namespace fs = std::filesystem;
 
 int main(const int argc, const char** argv)
 {
@@ -41,45 +44,51 @@ int main(const int argc, const char** argv)
     auto& denoised_env_stats = std::get<2>(denoiser_output);
     auto& monitor_data       = std::get<3>(denoiser_output);
 
-    // Calculate the statistics of the original map
-    auto original_env_stats = Denoiser::table_of_stats(original_map, r_env);
+    // Calculate the statistics of the noisy map
+    auto noisy_env_stats = Denoiser::table_of_stats(original_map, r_env);
 
     // Generate the path where the maps will be stored
     const auto maps_path = Path::format_str(
-        "%s/maps/s%.4f_h%.4f_r%.4f_p%.4f_e%.4f", 
-        protein_path, sigma, denoise_param, r_env, perc_t, feps
+        "out/data/%s/s%.4f_h%.4f_r%.4f_p%.4f_e%.4f", 
+        protein.c_str(), sigma, denoise_param, r_env, perc_t, feps
     );
 
     // Generate the path where the log will be output
-    const auto log_path = Path::format_str(
+    const auto logs_path = Path::format_str(
        "out/log/%s/s%.4f_h%.4f_r%.4f_p%.4f_e%.4f",
        protein.c_str(), sigma, denoise_param, r_env, perc_t, feps
     );
 
-    // Create the paths if needed
-    mkdir(maps_path.c_str(), 0777); 
-    mkdir(log_path.c_str(),  0777);
+    // Create the basic directories if needed
+    fs::create_directories(maps_path);
+    fs::create_directories(logs_path);
 
-    // Save the noisy map in memory
-    original_map.save_map(Path::join_path(maps_path, "noisy.map"));
+    // Paths to the noisy and denoised data
+    const auto n_path = Path::join_path(maps_path, "noisy/files");
+    const auto d_path = Path::join_path(maps_path, "denoised/files");
 
-    // Save the denoised map in memory
-    denoised_map.save_map(Path::join_path(maps_path, "denoised.map"));
-    
+    // Create the folder for the noisy and denoised data
+    fs::create_directories(n_path);
+    fs::create_directories(d_path);
+
+    // Save the noisy and denoised maps in memory
+    original_map.save_map(Path::join_path(n_path, "noisy.map"));
+    denoised_map.save_map(Path::join_path(d_path, "denoised.map"));
+
     // Save the statistics of the environment in memory
     Utils::save_envstats(
-        Path::join_path(maps_path, "envstat_noisy.dat"), 
-        original_env_stats, original_map
+        Path::join_path(maps_path, "noisy/log/envstats.dat"), 
+        noisy_env_stats, original_map
     );
 
     // Save the average for each environment in the denoised map
     Utils::save_envstats(
-        Path::join_path(maps_path, "envstat_denoised.dat"), 
+        Path::join_path(maps_path, "denoised/log/envstats.dat"), 
         denoised_env_stats, denoised_map
     );
 
     // Save the monitor data into the log path
-    Utils::save_stats(Path::join_path(log_path, "monitor.dat"), monitor_data);
+    Utils::save_stats(Path::join_path(logs_path, "monitor.dat"), monitor_data);
 
     // Output the value of h to capture it in the pipeline
     std::cout << denoise_param << std::endl;
