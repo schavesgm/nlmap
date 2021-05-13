@@ -2,6 +2,9 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <sstream>
+#include <sys/stat.h>
 #include <cstdarg>
 #include <cstring>
 
@@ -15,4 +18,7 @@ namespace Path {
 
     // Join two path to generate a new one
     std::string join_path(const std::string&, const std::string&);
+
+    // Make all directories in a given path
+    void make_path(std::string, const char sep = '/');
 };

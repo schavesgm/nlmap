@@ -22,6 +22,7 @@ std::string Path::format_str(const std::string& fmt, ...)
     return &vec[0];
 }
 
+// Get the basename of a path
 std::string Path::get_basename(const std::string& str)
 {
     // Separator between paths
@@ -35,6 +36,7 @@ std::string Path::get_basename(const std::string& str)
     return("");
 }
 
+// Join a two paths taking into account the separators
 std::string Path::join_path(const std::string& a, const std::string& b)
 {
     // Get the last character in the a string
@@ -47,5 +49,35 @@ std::string Path::join_path(const std::string& a, const std::string& b)
         return a.substr(0, a.size() - 1) + b;
     } else {
         return a + b;
+    }
+}
+
+// Make all directories in a path if they do not exist
+void Path::make_path(std::string path, const char sep)
+{
+    // Split the string using the separator
+    std::replace(path.begin(), path.end(), sep, ' ');
+
+    // Vector where the separated data will be stored
+    std::vector<std::string> separated_path;
+
+    // Stringstream to separate the data
+    std::stringstream ss(path);
+
+    // Push back all subdirectories in the vector
+    std::string temp;
+    while (ss >> temp) separated_path.push_back(temp);
+
+    // Reconstructed path used to create all directories
+    std::string reconstructed_path = "";
+
+    // Iterate for all elements in the path
+    for (auto& p : separated_path) {
+
+        // Append the subpath to the reconstructed path
+        reconstructed_path += p + sep;
+
+        // Create the directory if it does not exist
+        mkdir(reconstructed_path.c_str(), 0777);
     }
 }

@@ -201,9 +201,6 @@ float* Denoiser::table_of_envs(Map& map, const float& r_env)
                 // Calculate the standard deviation of the current environment
                 for (octanct o = 0; o < Octanct::No; o++) {
 
-                    // Index in the contiguos memory
-                    const int env_oct = env_idx * cols + o;
-
                     // Octanct for the current environment
                     const float& oct = env[o];
 

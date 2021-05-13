@@ -1,9 +1,5 @@
 #include <iostream>
-#include <sys/stat.h> 
-#include <sys/types.h> 
-#include <string>
 #include <tuple>
-#include <filesystem>
 
 // User defined modules
 #include <Map.hpp>
@@ -11,8 +7,6 @@
 #include <denoiser.hpp>
 #include <utils.hpp>
 #include <stats.hpp>
-
-namespace fs = std::filesystem;
 
 int main(const int argc, const char** argv)
 {
@@ -60,30 +54,34 @@ int main(const int argc, const char** argv)
     );
 
     // Create the basic directories if needed
-    fs::create_directories(maps_path);
-    fs::create_directories(logs_path);
+    Path::make_path(maps_path); 
+    Path::make_path(logs_path);
 
     // Paths to the noisy and denoised data
-    const auto n_path = Path::join_path(maps_path, "noisy/files");
-    const auto d_path = Path::join_path(maps_path, "denoised/files");
+    const auto n_files_path = Path::join_path(maps_path, "noisy/files");
+    const auto d_files_path = Path::join_path(maps_path, "denoised/files");
 
-    // Create the folder for the noisy and denoised data
-    fs::create_directories(n_path);
-    fs::create_directories(d_path);
+    // Paths to the noisy and denoised logs
+    const auto n_log_path = Path::join_path(maps_path, "noisy/log");
+    const auto d_log_path = Path::join_path(maps_path, "denoised/log");
+
+    // Create the needed directories
+    Path::make_path(n_files_path); Path::make_path(n_log_path);
+    Path::make_path(d_files_path); Path::make_path(d_log_path);
 
     // Save the noisy and denoised maps in memory
-    original_map.save_map(Path::join_path(n_path, "noisy.map"));
-    denoised_map.save_map(Path::join_path(d_path, "denoised.map"));
+    original_map.save_map(Path::join_path(n_files_path, "noisy.map"));
+    denoised_map.save_map(Path::join_path(d_files_path, "denoised.map"));
 
     // Save the statistics of the environment in memory
     Utils::save_envstats(
-        Path::join_path(maps_path, "noisy/log/envstats.dat"), 
+        Path::join_path(n_log_path, "envstats.dat"), 
         noisy_env_stats, original_map
     );
 
     // Save the average for each environment in the denoised map
     Utils::save_envstats(
-        Path::join_path(maps_path, "denoised/log/envstats.dat"), 
+        Path::join_path(d_log_path, "envstats.dat"), 
         denoised_env_stats, denoised_map
     );
 
