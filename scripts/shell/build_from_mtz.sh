@@ -8,49 +8,32 @@ source ${CCP4_PATH}/bin/ccp4.setup-sh
 source ${BASE_PATH}/scripts/shell/checks.sh
 
 # -- Retrieve some command line variables
-PROT_PATH=${1}; RUN_PATH=$(pwd); OVERWRITE=false
-
-# -- Boolean flag to not overwrite data
-[[ ! -z ${2} ]] && OVERWRITE=true
+PROTEIN=${1}; SIM_NAME=${2}; RUN_PATH=$(pwd);
 
 # -- Generate some variables
-PROTEIN=$(basename ${PROT_PATH}); 
-OUT_PATH=${RUN_PATH}/out/${PROTEIN}/refmtz
-
-# -- Check if directories exist
-assert_dir_exists ${PROT_PATH}
-
-# -- If the output folder exists, then decide to continue
-if [[ (-d ${OUT_PATH}) && (${OVERWRITE} == "false") ]]; then
-    info_message "${OUT_PATH} already exists and not overwriting."
-    exit 0
-fi
+OUT_PATH=${RUN_PATH}/out/data/${PROTEIN}/${SIM_NAME}/refmtz
 
 # -- Create the output directory if not present
-mkdir -p ${OUT_PATH} 
+mkdir -p ${OUT_PATH} ${OUT_PATH}/files ${OUT_PATH}/log
+
+# -- Path to the refmtz files and the log results
+FILES_PATH=${OUT_PATH}/files; LOG_PATH=${OUT_PATH}/log
 
 # -- Check if some files exist
-assert_file_exists ${PROT_PATH}/dataset.mtz
-assert_file_exists ${PROT_PATH}/refmac.mtz
+assert_file_exists ${FILES_PATH}/dataset.mtz
+assert_file_exists ${FILES_PATH}/refmac.mtz
+assert_file_exists ${FILES_PATH}/refmac.pdb
+assert_file_exists ${FILES_PATH}/sequence.seq
 
 # -- Names of the files used to output the data
-CAD_LOG=${OUT_PATH}/log/cad_input.log
-BUC_LOG=${OUT_PATH}/log/buccaneer.log
-
-# -- Move to directory and save new directory
-cd ${OUT_PATH}; END_PATH=$(pwd)
+CAD_LOG=${LOG_PATH}/cad_input.log
+BUC_LOG=${LOG_PATH}/buccaneer.log
  
-# -- Assert we are in the correct directory
-assert_location ${RUN_PATH} out/${PROTEIN}/refmtz ${END_PATH}
-
-# -- Remove all files in the current directory
-rm -r ./* >/dev/null 2>&1
-
-# -- Create the log directory
-mkdir -p ${OUT_PATH}/log
+# -- Move to directory and save new directory
+cd ${FILES_PATH}; END_PATH=$(pwd)
 
 # -- Generate the output for buccaneer
-cad HKLIN1 ${PROT_PATH}/dataset.mtz HKLIN2 ${PROT_PATH}/refmac.mtz HKLOUT buccaneer-input.mtz > ${CAD_LOG} <<eof
+cad HKLIN1 dataset.mtz HKLIN2 refmac.mtz HKLOUT buccaneer-input.mtz > ${CAD_LOG} <<eof
 LABIN  FILE 1 E1=F E2=SIGF E3=FreeR_flag
 LABIN  FILE 2 E1=PHIC_ALL_LS E2=FOM
 eof
@@ -62,7 +45,7 @@ pdbin-ref ${CCP4_PATH}/lib/data/reference_structures/reference-1tqw.pdb
 mtzin-ref ${CCP4_PATH}/lib/data/reference_structures/reference-1tqw.mtz
 colin-ref-fo [/*/*/FP.F_sigF.F,/*/*/FP.F_sigF.sigF]
 colin-ref-hl [/*/*/FC.ABCD.A,/*/*/FC.ABCD.B,/*/*/FC.ABCD.C,/*/*/FC.ABCD.D]
-seqin ${PROT_PATH}/sequence.seq
+seqin sequence.seq
 mtzin buccaneer-input.mtz
 colin-fo [/*/*/F,/*/*/SIGF]
 colin-free [/*/*/FreeR_flag]
@@ -80,6 +63,6 @@ buccaneer-resolution 2
 buccaneer-new-residue-name UNK
 buccaneer-keyword mr-model-filter-sigma 3
 jobs 2
-pdbin-mr ${PROT_PATH}/refmac.pdb
+pdbin-mr refmac.pdb
 prefix ./buccaneer_pipeline/
 eof
