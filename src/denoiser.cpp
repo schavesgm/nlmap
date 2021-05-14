@@ -34,10 +34,10 @@ vector<grid_point> Denoiser::table_of_indices(Map& map, const float& r_env)
 // -- }}}
 
 // -- Construct the environment around a given grid point
-vector<float> Denoiser::get_env(const Map& map, const int& u, const int& v, const int& w, const vector<grid_point>& indices)
+vector<float>* Denoiser::get_octs(const Map& map, const int& u, const int& v, const int& w, const vector<grid_point>& indices)
 {
-    // Vector that will contain the environment values separated into octancts
-    vector<float> raw_env[Octanct::No];
+    // Vector containing the points per octanct
+    vector<float>* oct_points = new vector<float>[Octanct::No];
 
     // Vectors used to assign points to octancts
     vector<octanct> u_oct, v_oct, w_oct;
@@ -66,7 +66,7 @@ vector<float> Denoiser::get_env(const Map& map, const int& u, const int& v, cons
         for (auto& ou : u_oct) {
             for (auto& ov : v_oct) {
                 for (auto& ow : w_oct) {
-                    raw_env[(ow | ov | ou)].push_back(
+                    oct_points[(ow | ov | ou)].push_back(
                         map.get_value(p.u + u, p.v + v, p.w + w) / norm
                     );
                 }
@@ -77,19 +77,7 @@ vector<float> Denoiser::get_env(const Map& map, const int& u, const int& v, cons
         u_oct.clear(); v_oct.clear(); w_oct.clear();
     }
 
-    // Calculate the average of the raw environment for each octanct
-    vector<float> env(Octanct::No);
-
-    for (octanct o = 0; o < Octanct::No; o++) {
-
-        // Calculate the sum of all points in the octanct
-        env[o] = std::accumulate(raw_env[o].begin(), raw_env[o].end(), 0.0f);
-
-        // Normalise by the number of points to obtain the average
-        env[o] = env[o] / raw_env[o].size();
-    }
-
-    return env;
+    return oct_points;
 }
 // -- }}}
 
@@ -100,7 +88,7 @@ int Denoiser::avg_points_per_octanct(Map& map, const float& r_env)
     const auto indices = table_of_indices(map, r_env);
 
     // Vectors that will contain the points
-    vector<int> count_env[Octanct::No];
+    vector<int> oct_points[Octanct::No];
 
     // Vector that will contain the average of each octanct
     vector<float> pp_oct(Octanct::No);
@@ -129,7 +117,7 @@ int Denoiser::avg_points_per_octanct(Map& map, const float& r_env)
         for (auto& ou : u_oct) {
             for (auto& ov : v_oct) {
                 for (auto& ow : w_oct) {
-                    count_env[(ow | ov | ou)].push_back(1);
+                    oct_points[(ow | ov | ou)].push_back(1);
                 }
             }
         }
@@ -143,7 +131,7 @@ int Denoiser::avg_points_per_octanct(Map& map, const float& r_env)
 
     // Get the number of points per octanct
     for (octanct o = 0; o < Octanct::No; o++) {
-        avg_count += count_env[o].size();
+        avg_count += oct_points[o].size();
     }
 
     return avg_count / Octanct::No;
@@ -158,63 +146,54 @@ float* Denoiser::table_of_envs(Map& map, const float& r_env)
 
     // Number of rows and columns in the array
     const int rows = map.get_volume();
-    const int cols = Octanct::No + 2;
+    const int cols = Octanct::No + 1;
 
     // Allocate memory for all octancts in the grid
     float* envs = new float[rows * cols];
 
     // Count the corresponding environment for each point
-    int env_idx = 0;
+    int eidx = 0;
 
     // iterate for each point in the grid to obtain its environment
     for (int w = 0; w < map.Nw; w++) {
         for (int v = 0; v < map.Nv; v++) {
             for (int u = 0; u < map.Nu; u++) {
 
-                // Append the quadrant to the table
-                const auto env = get_env(map, u, v, w, indices);
+                // Get all points in each octanct
+                const vector<float>* oct_points = get_octs(map, u, v, w, indices);
 
-                // Temporary that will contain the average of the environment
+                // Vector containing the sum of all points in each octanct
+                float oct_sum[Octanct::No];
+
+                // Temporary that will contain the avg value of the environment
                 float env_avg = 0.0f;
 
-                // Copy the octanct data and calculate the average value
-                for (octanct o = 0; o < Octanct::No; o++) {
+                // Iterate for each octanct to calculate its average value
+                for (int o = 0; o < Octanct::No; o++) {
 
-                    // Index in the contiguos memory
-                    const int e_idx = env_idx * cols + o;
+                    // Sum of all points in the current octanct
+                    oct_sum[o] = std::accumulate(
+                        oct_points[o].begin(), oct_points[o].end(), 0.0f
+                    );
 
-                    // Octanct for the current environment
-                    const float& oct = env[o];
+                    // Add the value to the environment average
+                    env_avg += oct_sum[o];
 
-                    // Copy the data into the memory
-                    envs[e_idx] = oct;
-
-                    // Add the environment to the sum
-                    env_avg += oct;
+                    // Copy the octanct average to the correct environment
+                    envs[eidx * cols + o] = oct_sum[o] / oct_points[o].size();
                 }
 
                 // Calculate the average of the environment
-                env_avg = env_avg / Octanct::No;
-
-                // Temporary containing the standard deviation of the environment
-                float env_std = 0.0f;
-
-                // Calculate the standard deviation of the current environment
-                for (octanct o = 0; o < Octanct::No; o++) {
-
-                    // Octanct for the current environment
-                    const float& oct = env[o];
-
-                    // Add the environment to the standard deviation
-                    env_std += std::pow(oct - env_avg, 2);
-                }
+                env_avg = env_avg / indices.size();
 
                 // Append the standard deviation to the table
-                envs[env_idx * cols + Octanct::No + 0] = env_avg;
-                envs[env_idx * cols + Octanct::No + 1] = std::sqrt(env_std / (Octanct::No - 1));
+                envs[eidx * cols + Octanct::No] = env_avg;
 
                 // Move to the next environment in the grid
-                env_idx++;
+                eidx++;
+
+                // Delete the heap allocated data
+                delete[] oct_points;
             }
         }
     }
@@ -224,7 +203,7 @@ float* Denoiser::table_of_envs(Map& map, const float& r_env)
 }
 // -- }}}
 
-// -- Table containing all averaged environments {{{
+// -- Table containing environment statistics {{{
 vector<float> Denoiser::table_of_stats(Map& map, const float& r_env)
 {
     // First, obtain a table of near indices
@@ -234,44 +213,45 @@ vector<float> Denoiser::table_of_stats(Map& map, const float& r_env)
     const int Ne = map.get_volume();
 
     // Allocate memory for all octancts in the grid
-    vector<float> env_stats(Ne * 2);
+    vector<float> env_stats(Ne);
 
     // Count the corresponding environment for each point
-    int env_idx = 0;
+    int eidx = 0;
 
     // iterate for each point in the grid to obtain its environment
     for (int w = 0; w < map.Nw; w++) {
         for (int v = 0; v < map.Nv; v++) {
             for (int u = 0; u < map.Nu; u++) {
 
-                // Append the quadrant to the table
-                const auto env = get_env(map, u, v, w, indices);
+                // Get all points in each octanct
+                const vector<float>* oct_points = get_octs(map, u, v, w, indices);
 
-                // Temporary that will contain the average of the environment
-                float avg = 0.0f;
+                // Vector containing the sum of all points in each octanct
+                float oct_sum[Octanct::No];
 
-                // Sum all octancts in the environment
-                for (octanct o = 0; o < Octanct::No; o++) { 
-                    avg += env[o]; 
+                // Temporary that will contain the avg of the environment
+                float env_avg = 0.0f;
+
+                // Iterate for each octanct to calculate its average value
+                for (int o = 0; o < Octanct::No; o++) {
+
+                    // Sum of all points in the current octanct
+                    oct_sum[o] = std::accumulate(
+                        oct_points[o].begin(), oct_points[o].end(), 0.0f
+                    );
+
+                    // Add the value to the environment average
+                    env_avg += oct_sum[o];
                 }
 
-                // Normalise the average
-                avg = avg / Octanct::No;
-
-                // Temporary containing the standard deviation of the environment
-                float std = 0.0f;
-
-                // Calculate the standard deviation of the current environment
-                for (octanct o = 0; o < Octanct::No; o++) { 
-                    std += std::pow(env[o] - avg, 2);
-                }
-
-                // Append the average and the standard deviation to the vector
-                env_stats[env_idx * 2 + 0] = avg;
-                env_stats[env_idx * 2 + 1] = std::sqrt(std / (Octanct::No - 1));
+                // Calculate the average of the environment
+                env_stats[eidx] = env_avg / indices.size();
 
                 // Move to the next environment in the grid
-                env_idx++;
+                eidx++;
+
+                // Delete the heap allocated data
+                delete[] oct_points;
             }
         }
     }
@@ -289,7 +269,7 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     const int& Ne = map.get_volume();  // -- Number of environments (points) in the map
     const int& No = Octanct::No;       // -- Number of octancts in an env (8)
     const int& Nr = Octanct::Nr;       // -- Number of rotations per comp (10)
-    const int  Nv = No + 2;            // -- Number of octancts + env_avg + env_std
+    const int  Nv = No + 1;            // -- Number of octancts + env_avg
 
     // Generate a copy of the map to denoise it
     Map denoised_map = map;

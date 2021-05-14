@@ -36,8 +36,8 @@ namespace Denoiser
     float* table_of_envs(Map&, const float&);
     // -- }}}
 
-    // -- Construct the environment around each point {{{
-    vector<float> get_env(const Map&, const int&, const int&, const int&, const vector<grid_point>&);
+    // -- Assign all points in the environment to the correct octanct {{{
+    vector<float>* get_octs(const Map&, const int&, const int&, const int&, const vector<grid_point>&);
     int avg_points_per_octanct(Map&, const float&);
     // -- }}}
 
