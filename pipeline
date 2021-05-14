@@ -27,7 +27,7 @@ assert_var_exists "CCP4_PATH" ${CCP4_PATH}
 PROTEIN=${1};               assert_var_exists "protein"   ${1}
 SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
 HPERC=$(printf %.4f ${3});  assert_var_exists "h_perc"    ${3}
-R_ENV=$(printf %.4f ${4});  assert_var_exists "r_env"  ${4}
+R_ENV=$(printf %.4f ${4});  assert_var_exists "r_env"     ${4}
 PFEPS=$(printf %.4f ${5});  assert_var_exists "pref_eps"  ${5}
 
 # -- Directories to the scripts
