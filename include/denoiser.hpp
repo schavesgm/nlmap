@@ -24,7 +24,7 @@ using std::vector;
 namespace Denoiser
 {
     // -- Basic function used for denoising {{{
-    std::tuple<Map, float, vector<float>, vector<float>> 
+    std::tuple<Map, float, vector<float>> 
         nlmeans_denoiser(Map&, const float&, const float&, const float&);
     // -- }}}
 

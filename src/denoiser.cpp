@@ -81,7 +81,8 @@ vector<float> Denoiser::get_env(const Map& map, const int& u, const int& v, cons
     vector<float> env(Octanct::No);
 
     for (octanct o = 0; o < Octanct::No; o++) {
-        // Calculate the sum of all point in the octanct
+
+        // Calculate the sum of all points in the octanct
         env[o] = std::accumulate(raw_env[o].begin(), raw_env[o].end(), 0.0f);
 
         // Normalise by the number of points to obtain the average
@@ -180,13 +181,13 @@ float* Denoiser::table_of_envs(Map& map, const float& r_env)
                 for (octanct o = 0; o < Octanct::No; o++) {
 
                     // Index in the contiguos memory
-                    const int env_oct = env_idx * cols + o;
+                    const int e_idx = env_idx * cols + o;
 
                     // Octanct for the current environment
                     const float& oct = env[o];
 
                     // Copy the data into the memory
-                    envs[env_oct] = oct;
+                    envs[e_idx] = oct;
 
                     // Add the environment to the sum
                     env_avg += oct;
@@ -281,7 +282,7 @@ vector<float> Denoiser::table_of_stats(Map& map, const float& r_env)
 // -- }}}
 
 // -- Main algorithm to denoise a map using non-local means {{{
-std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
+std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     Map& map, const float& p_thresh, const float& r_env, const float& eps
 ) {
     // Construct some needed aliases
@@ -313,14 +314,10 @@ std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
     const octanct* rots = Octanct::table_of_rotations();
 
     // Construct a vector of avg environments, needed for output
-    vector<float> env_stats(Ne * 2); vector<float> env_avg(Ne);
+    vector<float> env_avg(Ne);
 
     // Copy the environment averages inside the vector
-    for (int e = 0; e < Ne; e++) { 
-        env_stats[e * 2 + 0] = envs[e * Nv + No + 0]; // Average
-        env_stats[e * 2 + 1] = envs[e * Nv + No + 1]; // Standard deviation
-        env_avg[e] = envs[e * Nv + No];               // Average
-    }
+    for (int e = 0; e < Ne; e++) { env_avg[e] = envs[e * Nv + No]; }
 
     // Get the maximum and minimum environment average
     const auto min = std::min_element(env_avg.begin(), env_avg.end());
@@ -422,6 +419,6 @@ std::tuple<Map, float, vector<float>, vector<float>> Denoiser::nlmeans_denoiser(
     delete[] prefilter_passed;
 
     // Return a tuple containing the denoised map and the denoised parameter
-    return std::make_tuple(denoised_map, hd, env_stats, monitor);
+    return std::make_tuple(denoised_map, hd, monitor);
 }
 // -- }}}

@@ -12,7 +12,7 @@ int main(const int argc, const char** argv)
 {
     // Path to the protein
     const char* protein_path = argv[1];
-    const char* map_path     = argv[2];
+    const char* map_name     = argv[2];
 
     // Added sigma noise to the map
     const float sigma  = std::stof(argv[3]);
@@ -24,7 +24,7 @@ int main(const int argc, const char** argv)
     const auto protein = Path::get_basename(protein_path);
 
     // Load a Map file from memory
-    Map original_map(Path::join_path(protein_path, map_path));
+    Map original_map(Path::join_path(protein_path, map_name));
 
     // Add some noise to the map according to sigma
     original_map.add_noise(sigma);
@@ -35,11 +35,11 @@ int main(const int argc, const char** argv)
     // References to the objects encoded in the denoiser output
     auto& denoised_map       = std::get<0>(denoiser_output);
     auto& denoise_param      = std::get<1>(denoiser_output);
-    auto& denoised_env_stats = std::get<2>(denoiser_output);
-    auto& monitor_data       = std::get<3>(denoiser_output);
+    auto& monitor_data       = std::get<2>(denoiser_output);
 
-    // Calculate the statistics of the noisy map
-    auto noisy_env_stats = Denoiser::table_of_stats(original_map, r_env);
+    // Calculate the environment statistics of the noisy and denoised maps
+    auto noisy_env_stats    = Denoiser::table_of_stats(original_map, r_env);
+    auto denoised_env_stats = Denoiser::table_of_stats(denoised_map, r_env);
 
     // Generate the path where the maps will be stored
     const auto maps_path = Path::format_str(

@@ -79,5 +79,10 @@ struct Map : public gemmi::Ccp4<float>
     const double& alpha = grid.unit_cell.alpha;
     const double& beta  = grid.unit_cell.beta;
     const double& gamma = grid.unit_cell.gamma;
+
+    // Lattice spacing in each direction
+    const double& a_u = grid.spacing[0];
+    const double& a_v = grid.spacing[1];
+    const double& a_w = grid.spacing[2];
     // -- }}}
 };
