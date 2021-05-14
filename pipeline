@@ -101,7 +101,7 @@ rm ${PROT_PATH}/${MAP_FILE}
 for map_file in "noisy" "denoised"; do
 
     # -- Generate the path to the map file
-    PATH_TO_MAP=${OUT_DATA_PATH}/${map_file}/files/
+    PATH_TO_MAP=${OUT_DATA_PATH}/${map_file}/files
 
     # -- Assert the existence of the path
     assert_file_exists ${PATH_TO_MAP}/${map_file}.map
