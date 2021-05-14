@@ -28,13 +28,13 @@ void Utils::save_envstats(
     if (stream.is_open()) {
 
         // Flush some important data in the stream
-        stream << -3 << " " << map.min_value() << " " << 0.0f << "\n";
-        stream << -2 << " " << map.max_value() << " " << 0.0f << "\n";
-        stream << -1 << " " << map.avg_value() << " " << 0.0f << "\n";
+        stream << -3 << " " << map.min_value() << "\n";
+        stream << -2 << " " << map.max_value() << "\n";
+        stream << -1 << " " << map.avg_value() << "\n";
 
         // Flush the environments stats into the stream
         for (int e = 0; e < map.get_volume(); e++) {
-            stream << e << " " << estat[e * 2 + 0] << " " << estat[e * 2 + 1] << "\n";
+            stream << e << " " << estat[e] <<  "\n";
         }
     }
 
