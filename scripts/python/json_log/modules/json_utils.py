@@ -172,7 +172,7 @@ def JSON_pipeline(path_to_out_data, path_to_out_log):
     json_out['builds']['refmtz']   = dump_refmtz(refmtz)
     json_out['builds']['refmap']   = dump_map(refmap)
     json_out['builds']['noisy']    = dump_map(noisy)
-    json_out['builds']['denoised'] = dump_map(noisy)
+    json_out['builds']['denoised'] = dump_map(denoised)
 
     # Path to the output file
     path_to_out_json = os.path.join(path_to_out_log, '{}_log.json'.format(protein))
