@@ -396,9 +396,6 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     monitor[6] = Ne;
     monitor[7] = avg_points_per_octanct(map, r_env);
 
-    for (auto& p : monitor) std::cout << p << " ";
-    std::cout << std::endl;
-
     // Delete the heap allocated data
     delete[] envs;
     delete[] rots;
