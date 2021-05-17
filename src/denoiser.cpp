@@ -307,6 +307,9 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     const float hd  = p_thresh * (*max - *min);
     const float den = 2 * hd * hd;
 
+    // Calculate the prefilter threshold for the data
+    const float pref_tol = (eps * (*max - *min)) / 2;
+
     // Iterate for each reference environment in the grid
     for (int er = 0; er < Ne; er++) {
 
@@ -326,7 +329,7 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
             const float& cA = envs[ec * Nv + No];
 
             // Filter to enhance performance of the denoiser
-            if (std::abs(rA - cA) < eps * hd) {
+            if (std::abs(rA - cA) < pref_tol) {
 
                 // Variable containing the minimum distance squared
                 float min_dsq = 1000000000;
@@ -382,15 +385,19 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     for (int e = 0; e < Ne; e++) { prefilter_passed[e] /= Ne; }
 
     // Calculate some statistics of the prefilter
-    std::vector<float> monitor(7);
+    std::vector<float> monitor(8);
 
-    monitor[0] = Stats::mean(prefilter_passed, Ne);
-    monitor[1] = Stats::std(prefilter_passed, Ne);
-    monitor[2] = Stats::median(prefilter_passed, Ne);
-    monitor[3] = Stats::max(prefilter_passed, Ne);
-    monitor[4] = Stats::min(prefilter_passed, Ne);
-    monitor[5] = Ne;
-    monitor[6] = avg_points_per_octanct(map, r_env);
+    monitor[0] = pref_tol;
+    monitor[1] = Stats::mean(prefilter_passed, Ne);
+    monitor[2] = Stats::std(prefilter_passed, Ne);
+    monitor[3] = Stats::median(prefilter_passed, Ne);
+    monitor[4] = Stats::max(prefilter_passed, Ne);
+    monitor[5] = Stats::min(prefilter_passed, Ne);
+    monitor[6] = Ne;
+    monitor[7] = avg_points_per_octanct(map, r_env);
+
+    for (auto& p : monitor) std::cout << p << " ";
+    std::cout << std::endl;
 
     // Delete the heap allocated data
     delete[] envs;

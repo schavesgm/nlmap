@@ -54,13 +54,14 @@ void Utils::save_stats(const T path, const std::vector<float>& stats)
     if (stream.is_open()) {
 
         // Flush some important data in the stream
-        stream << stats[0] << " # Mean\n";
-        stream << stats[1] << " # Std\n";
-        stream << stats[2] << " # Median\n";
-        stream << stats[3] << " # Max\n";
-        stream << stats[4] << " # Min\n";
-        stream << stats[5] << " # Number of points\n";
-        stream << stats[6] << " # Average points per octanct\n";
+        stream << stats[0] << " # Prefilter tolerance\n";
+        stream << stats[1] << " # Mean\n";
+        stream << stats[2] << " # Std\n";
+        stream << stats[3] << " # Median\n";
+        stream << stats[4] << " # Max\n";
+        stream << stats[5] << " # Min\n";
+        stream << stats[6] << " # Number of points\n";
+        stream << stats[7] << " # Average points per octanct\n";
     }
 
     // Close the stream
