@@ -305,7 +305,7 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
 
     // Calculate the denoising parameter using the threshold provided
     const float hd  = p_thresh * (*max - *min);
-    const float den = 2 * hd * hd;
+    const float inv_den = 1 / (2 * hd * hd);
 
     // Calculate the prefilter threshold for the data
     const float pref_tol = (eps * (*max - *min)) / 2;
@@ -317,7 +317,7 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
         denoised_M[er] += 1.0f * original_M[er];
 
         // Reference to the reference environment avg
-        const float& rA = envs[er * Nv + No];
+        const float& rEnvavg = envs[er * Nv + No];
 
         // The prefilter is passed when comparing reference with reference
         prefilter_passed[er] += 1;
@@ -326,10 +326,10 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
         for (int ec = er + 1; ec < Ne; ec++) {
 
             // References to the comparison environment avg
-            const float& cA = envs[ec * Nv + No];
+            const float& cEnvavg = envs[ec * Nv + No];
 
             // Filter to enhance performance of the denoiser
-            if (std::abs(rA - cA) < pref_tol) {
+            if (std::abs(rEnvavg - cEnvavg) < pref_tol) {
 
                 // Variable containing the minimum distance squared
                 float min_dsq = 1000000000;
@@ -359,7 +359,7 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
                 }
 
                 // Compute the kernel for the current comparison
-                const float kernel = std::exp(- min_dsq / den);
+                const float kernel = std::exp(- min_dsq * inv_den);
 
                 // Update the map value with the weighted sum
                 denoised_M[er] += kernel * original_M[ec];
