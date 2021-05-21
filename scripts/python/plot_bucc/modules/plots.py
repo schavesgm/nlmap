@@ -38,7 +38,6 @@ def plot_parameters(log_path):
     h_denoise    = json_dict['h_denoise']
     h_proportion = json_dict['h_proportion']
     r_comparison = json_dict['r_comparison']
-    prefilter_ep = json_dict['pref_eps']
 
     # Generate a figure to plot the data into it
     fig = plt.figure(figsize = (14, 10))
@@ -56,10 +55,10 @@ def plot_parameters(log_path):
     axis_Rf.set_ylim(0.2, 0.4)
 
     # Set the title in the plot
-    title = '{} ({} -- {}).  s = {}, h = {}, p = {}, r = {} (A), e = {}'
+    title = '{} ({} -- {}).  s = {}, h = {}, p = {}, r = {} (A)'
     fig.suptitle(title.format(
         protein, spc_grp, resolution, noise_std,
-        h_denoise, h_proportion, r_comparison, prefilter_ep
+        h_denoise, h_proportion, r_comparison
         )
     )
 
@@ -123,16 +122,15 @@ def plot_residues(log_path):
     h_denoise    = json_dict['h_denoise']
     h_proportion = json_dict['h_proportion']
     r_comparison = json_dict['r_comparison']
-    prefilter_ep = json_dict['pref_eps']
 
     # Generate a figure to hold the data
     fig = plt.figure(figsize = (14, 10))
 
     # Set the title in the plot
-    title = '{} ({} -- {}).  s = {}, h = {}, p = {}, r = {} (A), e = {}'
+    title = '{} ({} -- {}).  s = {}, h = {}, p = {}, r = {} (A)'
     fig.suptitle(title.format(
         protein, spc_grp, resolution, noise_std,
-        h_denoise, h_proportion, r_comparison, prefilter_ep
+        h_denoise, h_proportion, r_comparison
         )
     )
 

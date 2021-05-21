@@ -28,7 +28,6 @@ PROTEIN=${1};               assert_var_exists "protein"   ${1}
 SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
 HPERC=$(printf %.4f ${3});  assert_var_exists "h_perc"    ${3}
 R_ENV=$(printf %.4f ${4});  assert_var_exists "r_env"     ${4}
-PFEPS=$(printf %.4f ${5});  assert_var_exists "pref_eps"  ${5}
 
 # -- Directories to the scripts
 MAKE_MAP=${BASE_PATH}/scripts/shell/make_map.sh
@@ -55,7 +54,6 @@ header_message "Protein selected: ${PROTEIN}"
 header_message "Standard deviation of added noise: ${SIGMA}"
 header_message "Proportion used in denoising parameter: ${HPERC}"
 header_message "Radious used in environments: ${R_ENV} (A)"
-header_message "Prefiler epsilon: ${PFEPS}"
 
 # -- Generate a variable containing the specific map file for this run
 MAP_FILE=refmac_${RANDOM}_${HPERC}.map
@@ -67,13 +65,13 @@ ${MAKE_MAP} ${PROT_PATH} ${MAP_FILE}
 
 # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
-HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} ${MAP_FILE} ${SIGMA} ${HPERC} ${R_ENV} ${PFEPS})
+HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} ${MAP_FILE} ${SIGMA} ${HPERC} ${R_ENV})
 
 # -- Restrict the denoiser parameter to 4 digits
 HDEN=$(printf %.4f ${HDEN})
 
 # -- Specific name of the simulation to be used
-SIM_NAME="s${SIGMA}_h${HDEN}_r${R_ENV}_p${HPERC}_e${PFEPS}"
+SIM_NAME="s${SIGMA}_h${HDEN}_r${R_ENV}_p${HPERC}"
 
 # -- Copy the needed reference data to the correct location
 OUT_DATA_PATH=out/data/${PROTEIN}/${SIM_NAME}
