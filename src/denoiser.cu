@@ -1,6 +1,8 @@
 #include <denoiser.hpp>
+#include <iomanip>
 
 // -- Inline function to get all octancts in a vector
+__host__
 inline void get_octancts(vector<unsigned char>& vec, const unsigned char& pos_flag, const int& p)
 {
     // Flag that implies that p < 0
@@ -17,6 +19,7 @@ inline void get_octancts(vector<unsigned char>& vec, const unsigned char& pos_fl
 }
 
 // -- Indices whose distance to a central point is less than R_max {{{
+__host__
 vector<grid_point> Denoiser::table_of_indices(Map& map, const float& r_env) 
 {
     // Vector that will conatin all nearest indices
@@ -34,8 +37,11 @@ vector<grid_point> Denoiser::table_of_indices(Map& map, const float& r_env)
 // -- }}}
 
 // -- Construct the environment around a given grid point
-vector<float>* Denoiser::get_octs(const Map& map, const int& u, const int& v, const int& w, const vector<grid_point>& indices)
-{
+__host__
+vector<float>* Denoiser::get_octs(
+    const Map& map, const int& u, const int& v, const int& w, 
+    const vector<grid_point>& indices
+) {
     // Vector containing the points per octanct
     vector<float>* oct_points = new vector<float>[Octanct::No];
 
@@ -82,6 +88,7 @@ vector<float>* Denoiser::get_octs(const Map& map, const int& u, const int& v, co
 // -- }}}
 
 // -- Get the average points per octanct {{{
+__host__
 int Denoiser::avg_points_per_octanct(Map& map, const float& r_env)
 {
     // Obtain the table of indices
@@ -139,17 +146,18 @@ int Denoiser::avg_points_per_octanct(Map& map, const float& r_env)
 // -- }}}
 
 // -- Table containing the environment data, its average and standard deviation {{{
+__host__
 float* Denoiser::table_of_envs(Map& map, const float& r_env)
 {
     // First, obtain a table of near indices
     const auto indices = table_of_indices(map, r_env);
 
     // Number of rows and columns in the array
-    const int rows = map.get_volume();
-    const int cols = Octanct::No + 1;
+    const int& Ne = map.get_volume();
+    const int& No = Octanct::No;
 
     // Allocate memory for all octancts in the grid
-    float* envs = new float[rows * cols];
+    float* envs = new float[Ne * No];
 
     // Count the corresponding environment for each point
     int eidx = 0;
@@ -165,9 +173,6 @@ float* Denoiser::table_of_envs(Map& map, const float& r_env)
                 // Vector containing the sum of all points in each octanct
                 float oct_sum[Octanct::No];
 
-                // Temporary that will contain the avg value of the environment
-                float env_avg = 0.0f;
-
                 // Iterate for each octanct to calculate its average value
                 for (int o = 0; o < Octanct::No; o++) {
 
@@ -176,18 +181,9 @@ float* Denoiser::table_of_envs(Map& map, const float& r_env)
                         oct_points[o].begin(), oct_points[o].end(), 0.0f
                     );
 
-                    // Add the value to the environment average
-                    env_avg += oct_sum[o];
-
                     // Copy the octanct average to the correct environment
-                    envs[eidx * cols + o] = oct_sum[o] / oct_points[o].size();
+                    envs[eidx * No + o] = oct_sum[o] / oct_points[o].size();
                 }
-
-                // Calculate the average of the environment
-                env_avg = env_avg / indices.size();
-
-                // Append the standard deviation to the table
-                envs[eidx * cols + Octanct::No] = env_avg;
 
                 // Move to the next environment in the grid
                 eidx++;
@@ -204,6 +200,7 @@ float* Denoiser::table_of_envs(Map& map, const float& r_env)
 // -- }}}
 
 // -- Table containing environment statistics {{{
+__host__
 vector<float> Denoiser::table_of_stats(Map& map, const float& r_env)
 {
     // First, obtain a table of near indices
@@ -262,147 +259,108 @@ vector<float> Denoiser::table_of_stats(Map& map, const float& r_env)
 // -- }}}
 
 // -- Main algorithm to denoise a map using non-local means {{{
-std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
-    Map& map, const float& p_thresh, const float& r_env, const float& eps
+__host__
+std::tuple<Map, float> Denoiser::nlmeans_denoiser(
+    Map& map, const float& p_thresh, const float& r_env
 ) {
     // Construct some needed aliases
-    const int& Ne = map.get_volume();  // -- Number of environments (points) in the map
-    const int& No = Octanct::No;       // -- Number of octancts in an env (8)
-    const int& Nr = Octanct::Nr;       // -- Number of rotations per comp (10)
-    const int  Nv = No + 1;            // -- Number of octancts + env_avg
+    const int& Ne = map.get_volume(); // -- Number of environments (points) in the map
+    const int& No = Octanct::No;      // -- Number of octancts in an env (8)
+    const int& Nr = Octanct::Nr;      // -- Number of rotations per comp (10)
 
     // Generate a copy of the map to denoise it
     Map denoised_map = map;
 
-    // Set the map data to zero
-    denoised_map.set_data(0.0f);
-
-    // Pointers to the relevant map data used in the algorithm
+    // Pointers to the denoised map and original map memory blocks
     float* denoised_M = denoised_map.data();
     float* original_M = map.data();
 
-    // Memory used to calculate the normalisation for each map
-    float* sum_kernels = new float[Ne]{0.0f};
-
-    // Memory used to count the amount of points that pass the prefilter
-    float* prefilter_passed = new float[Ne]{0};
-
-    // Generate a table containing all the environments, their avg and std
+    // Block of memory containing all environments and their averages
     const float* envs = table_of_envs(map, r_env);
 
-    // Generate a table containing the rotated indices for each rotation
+    // Table containing the rotated indices for each needed rotation
     const octanct* rots = Octanct::table_of_rotations();
 
-    // Construct a vector of avg environments, needed for output
-    vector<float> env_avg(Ne);
-
-    // Copy the environment averages inside the vector
-    for (int e = 0; e < Ne; e++) { env_avg[e] = envs[e * Nv + No]; }
+    // Get all average environments of the map -- std::vector
+    const auto env_stats = table_of_stats(map, r_env);
 
     // Get the maximum and minimum environment average
-    const auto min = std::min_element(env_avg.begin(), env_avg.end());
-    const auto max = std::max_element(env_avg.begin(), env_avg.end());
+    const auto min = std::min_element(env_stats.begin(), env_stats.end());
+    const auto max = std::max_element(env_stats.begin(), env_stats.end());
 
     // Calculate the denoising parameter using the threshold provided
-    const float hd  = p_thresh * (*max - *min);
+    const float hd  = 0.5 * p_thresh * (*max - *min);
     const float inv_den = 1 / (2 * hd * hd);
 
-    // Calculate the prefilter threshold for the data
-    const float pref_tol = (eps * (*max - *min)) / 2;
+    // Generate the device copies of the relevant objects
+    float* d_omap; float* d_dmap; float* d_envs; 
+    octanct* d_rots; float* d_sumk; float* d_dsq;
 
-    // Iterate for each reference environment in the grid
+    // Allocate some memory for the needed objects
+    cudaMalloc(&d_omap, Ne * sizeof(float));        // -- Original map
+    cudaMalloc(&d_dmap, Ne * sizeof(float));        // -- Denoised map
+    cudaMalloc(&d_sumk, Ne * sizeof(float));        // -- Sum of kernels
+    cudaMalloc(&d_envs, Ne * No * sizeof(float));   // -- Environments in the map
+    cudaMalloc(&d_rots, Nr * No * sizeof(octanct)); // -- Table of rotations
+    cudaMalloc(&d_dsq,  Ne * Nr * sizeof(float));   // -- Distance squared values
+
+    // Copy the original map, the environments and the table of rotations
+    cudaMemcpy(d_envs, envs,       Ne * No * sizeof(float),   cudaMemcpyHostToDevice);
+    cudaMemcpy(d_omap, original_M, Ne * sizeof(float),        cudaMemcpyHostToDevice);
+    cudaMemcpy(d_rots, rots,       Nr * No * sizeof(octanct), cudaMemcpyHostToDevice);
+
+    // Set the denoised map and the sum of kernels to zero
+    cudaMemset(d_dmap, 0.0f, Ne * sizeof(float));
+    cudaMemset(d_sumk, 0.0f, Ne * sizeof(float));
+
+    // Iterate through all reference environments in the map
     for (int er = 0; er < Ne; er++) {
 
-        // Append the central value with maximum weight
-        denoised_M[er] += 1.0f * original_M[er];
+        // Generate the geometry of the blocks to compute the distance squared
+        int T_dsq = 160;
+        int B_dsq = (Ne - er) / 2 + 1;
 
-        // Reference to the reference environment avg
-        const float& rEnvavg = envs[er * Nv + No];
+        // Generate the geometry of the blocks to update the denoiser
+        int T_den = 128;
+        int B_den = (Ne - er) / T_den + 1;
 
-        // The prefilter is passed when comparing reference with reference
-        prefilter_passed[er] += 1;
+        // Set enough memory in d_dsq to zero to compute the new distances
+        cudaMemset(d_dsq, 0.0f, (Ne - er) * Nr * sizeof(float));
 
-        // Iterate for all comparision environments without repetition
-        for (int ec = er + 1; ec < Ne; ec++) {
+        // Calculate all possible distance squared in parallel
+        calculate_dsq<<<B_dsq, T_dsq>>>(d_dsq, d_envs, d_rots, er, Ne, Nr, No);
 
-            // References to the comparison environment avg
-            const float& cEnvavg = envs[ec * Nv + No];
+        // Update the denoised map and the sum of kernels
+        update_denoiser<<<B_den, T_den>>>(
+            d_dmap, d_sumk, d_dsq, d_omap, er, Ne, Nr, inv_den
+        );
+    } // -- End of the denoiser loop
 
-            // Filter to enhance performance of the denoiser
-            if (std::abs(rEnvavg - cEnvavg) < pref_tol) {
+    // Host allocated version of the sum of kernels
+    float* sum_kernels = new float[Ne];
 
-                // Variable containing the minimum distance squared
-                float min_dsq = 1000000000;
+    // Copy the sum of kernels and the denoised map to the host
+    cudaMemcpy(denoised_M,  d_dmap, Ne * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(sum_kernels, d_sumk, Ne * sizeof(float), cudaMemcpyDeviceToHost);
 
-                // Compare both environments using all possible rotations
-                for (int r = 0; r < Nr; r++) {
-
-                    // Temporary containing the distance squared for this rot
-                    float d_sq = 0.0f;
-
-                    // Iterate over all octancts
-                    for (octanct o = 0; o < No; o++) {
-
-                        // Access the current octanct for each environment
-                        const float& oct_refr = envs[er * Nv + rots[r * No + o]];
-                        const float& oct_comp = envs[ec * Nv + o];
-
-                        // Update the distance squared with the current value
-                        d_sq += std::pow(oct_refr - oct_comp, 2);
-                    }
-
-                    // Normalise the distance squared
-                    d_sq = d_sq / No;
-
-                    // Update the minimum distance
-                    min_dsq = (min_dsq > d_sq) ? d_sq : min_dsq;
-                }
-
-                // Compute the kernel for the current comparison
-                const float kernel = std::exp(- min_dsq * inv_den);
-
-                // Update the map value with the weighted sum
-                denoised_M[er] += kernel * original_M[ec];
-                denoised_M[ec] += kernel * original_M[er];
-
-                // Update the sum of kernels for each
-                sum_kernels[er] += kernel;
-                sum_kernels[ec] += kernel;
-
-                // The prefilter is passed both for the reference and comparison env
-                prefilter_passed[er] += 1;
-                prefilter_passed[ec] += 1;
-
-            } // -- End of prefilter
-        } // -- End of comparison environment
-
-        // Denoise the value by computing the weighted average
-        denoised_M[er] /= (sum_kernels[er] + 1.0f);
-
-    } // -- End of main loop
-
-    // Normalise the prefilter with the number of examples
-    for (int e = 0; e < Ne; e++) { prefilter_passed[e] /= Ne; }
-
-    // Calculate some statistics of the prefilter
-    std::vector<float> monitor(8);
-
-    monitor[0] = pref_tol;
-    monitor[1] = Stats::mean(prefilter_passed, Ne);
-    monitor[2] = Stats::std(prefilter_passed, Ne);
-    monitor[3] = Stats::median(prefilter_passed, Ne);
-    monitor[4] = Stats::max(prefilter_passed, Ne);
-    monitor[5] = Stats::min(prefilter_passed, Ne);
-    monitor[6] = Ne;
-    monitor[7] = avg_points_per_octanct(map, r_env);
+    // Normalise the data using the sum of kernels
+    for (int er = 0; er < Ne; er++) {
+        denoised_M[er] = denoised_M[er] / sum_kernels[er];
+    }
 
     // Delete the heap allocated data
     delete[] envs;
     delete[] rots;
     delete[] sum_kernels;
-    delete[] prefilter_passed;
+
+    // Delete the device allocated data
+    cudaFree(d_omap);
+    cudaFree(d_dmap);
+    cudaFree(d_envs);
+    cudaFree(d_rots);
+    cudaFree(d_sumk);
 
     // Return a tuple containing the denoised map and the denoised parameter
-    return std::make_tuple(denoised_map, hd, monitor);
+    return std::make_tuple(denoised_map, hd);
 }
 // -- }}}

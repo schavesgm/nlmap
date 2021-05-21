@@ -29,16 +29,16 @@ all: obj $(CXX_OBJ) $(NVC_OBJ) main
 	@rm -r obj
 
 main:
-	$(CXX) $(CXXFLAGS) -c $@.cpp -o $(OBJ_DIR)/$@.o $(INCLUDE)
+	$(CXX) $(CXXFLAGS) -dc $@.cu -o $(OBJ_DIR)/$@.o $(INCLUDE)
 
 # -- Compile the CXX Map library in the src folder
 $(OBJ_DIR)/Map/%.o: $(SRC_DIR)/Map/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@ $(INCLUDE)
+	$(CXX) $(CXXFLAGS) -dc $< -o $@ $(INCLUDE)
 
 # -- Define a rule to compile small libraries
 define compile_small_lib
 $$(OBJ_DIR)/%.o: $$(SRC_DIR)/%.$1
-	$$(CXX) $$(CXXFLAGS) -c $$< -o $$@ $$(INCLUDE)
+	$$(CXX) $$(CXXFLAGS) -dc $$< -o $$@ $$(INCLUDE)
 endef
 
 # -- Compile all small libraries inside the src folder

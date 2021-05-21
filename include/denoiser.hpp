@@ -13,6 +13,7 @@
 #include "octanct.hpp"
 #include "Map.hpp"
 #include "stats.hpp"
+#include "cudenoiser.hpp"
 
 // Some definitions to clean the code
 #define grid_point gemmi::GridBase<float>::Point
@@ -20,12 +21,14 @@
 // Use the standard library vector
 using std::vector;
 
+// Use the namespace of Cudenoiser functions
+using namespace Cudenoiser;
+
 // Namespace containing all relevant functions to denoise maps
 namespace Denoiser
 {
     // -- Basic function used for denoising {{{
-    std::tuple<Map, float, vector<float>> 
-        nlmeans_denoiser(Map&, const float&, const float&, const float&);
+    std::tuple<Map, float> nlmeans_denoiser(Map&, const float&, const float&);
     // -- }}}
 
     // -- Indices of the grid whose distance to a central point is less than a given one {{{
