@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import regex, os, sys
 
 # Simulation regex
-SIMULATION_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)_e(\d+.\d+)'
+SIMULATION_FORMAT = 's(\d+.\d+)_h(\d+.\d+)_r(\d+.\d+)_p(\d+.\d+)'
 
 def eliminate_mirror_axis(axis):
     ''' Eliminate mirror axis from an axis plot. '''
@@ -141,10 +141,9 @@ if __name__ == '__main__':
 
     # Add the title to the data
     fig.suptitle(
-        's = {}, h = {}, p = {},  r = {} (A), e = {}'.format(
+        's = {}, h = {}, p = {},  r = {} (A)'.format(
             matches.group(1), matches.group(2),
             matches.group(3), matches.group(4),
-            matches.group(5)
         )
     )
 

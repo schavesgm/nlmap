@@ -24,8 +24,7 @@ using std::vector;
 namespace Denoiser
 {
     // -- Basic function used for denoising {{{
-    std::tuple<Map, float, vector<float>> 
-        nlmeans_denoiser(Map&, const float&, const float&, const float&);
+    std::tuple<Map, float> nlmeans_denoiser(Map&, const float&, const float&);
     // -- }}}
 
     // -- Indices of the grid whose distance to a central point is less than a given one {{{

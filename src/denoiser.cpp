@@ -138,7 +138,7 @@ int Denoiser::avg_points_per_octanct(Map& map, const float& r_env)
 }
 // -- }}}
 
-// -- Table containing the environment data, its average and standard deviation {{{
+// -- Table containing all the environments in the map {{{
 float* Denoiser::table_of_envs(Map& map, const float& r_env)
 {
     // First, obtain a table of near indices
@@ -262,8 +262,8 @@ vector<float> Denoiser::table_of_stats(Map& map, const float& r_env)
 // -- }}}
 
 // -- Main algorithm to denoise a map using non-local means {{{
-std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
-    Map& map, const float& p_thresh, const float& r_env, const float& eps
+std::tuple<Map, float> Denoiser::nlmeans_denoiser(
+    Map& map, const float& p_thresh, const float& r_env
 ) {
     // Construct some needed aliases
     const int& Ne = map.get_volume();  // -- Number of environments (points) in the map
@@ -284,10 +284,7 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     // Memory used to calculate the normalisation for each map
     float* sum_kernels = new float[Ne]{0.0f};
 
-    // Memory used to count the amount of points that pass the prefilter
-    float* prefilter_passed = new float[Ne]{0};
-
-    // Generate a table containing all the environments, their avg and std
+    // Generate a table containing all the environments and their averages
     const float* envs = table_of_envs(map, r_env);
 
     // Generate a table containing the rotated indices for each rotation
@@ -304,11 +301,8 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
     const auto max = std::max_element(env_avg.begin(), env_avg.end());
 
     // Calculate the denoising parameter using the threshold provided
-    const float hd  = p_thresh * (*max - *min);
+    const float hd  = 0.5 * p_thresh * (*max - *min);
     const float inv_den = 1 / (2 * hd * hd);
-
-    // Calculate the prefilter threshold for the data
-    const float pref_tol = (eps * (*max - *min)) / 2;
 
     // Iterate for each reference environment in the grid
     for (int er = 0; er < Ne; er++) {
@@ -316,64 +310,47 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
         // Append the central value with maximum weight
         denoised_M[er] += 1.0f * original_M[er];
 
-        // Reference to the reference environment avg
-        const float& rEnvavg = envs[er * Nv + No];
-
-        // The prefilter is passed when comparing reference with reference
-        prefilter_passed[er] += 1;
-
         // Iterate for all comparision environments without repetition
         for (int ec = er + 1; ec < Ne; ec++) {
 
-            // References to the comparison environment avg
-            const float& cEnvavg = envs[ec * Nv + No];
+            // Variable containing the minimum distance squared
+            float min_dsq = 1000000000;
 
-            // Filter to enhance performance of the denoiser
-            if (std::abs(rEnvavg - cEnvavg) < pref_tol) {
+            // Compare both environments using all possible rotations
+            for (int r = 0; r < Nr; r++) {
 
-                // Variable containing the minimum distance squared
-                float min_dsq = 1000000000;
+                // Temporary containing the distance squared for this rot
+                float d_sq = 0.0f;
 
-                // Compare both environments using all possible rotations
-                for (int r = 0; r < Nr; r++) {
+                // Iterate over all octancts
+                for (octanct o = 0; o < No; o++) {
 
-                    // Temporary containing the distance squared for this rot
-                    float d_sq = 0.0f;
+                    // Access the current octanct for each environment
+                    const float& oct_refr = envs[er * Nv + rots[r * No + o]];
+                    const float& oct_comp = envs[ec * Nv + o];
 
-                    // Iterate over all octancts
-                    for (octanct o = 0; o < No; o++) {
-
-                        // Access the current octanct for each environment
-                        const float& oct_refr = envs[er * Nv + rots[r * No + o]];
-                        const float& oct_comp = envs[ec * Nv + o];
-
-                        // Update the distance squared with the current value
-                        d_sq += std::pow(oct_refr - oct_comp, 2);
-                    }
-
-                    // Normalise the distance squared
-                    d_sq = d_sq / No;
-
-                    // Update the minimum distance
-                    min_dsq = (min_dsq > d_sq) ? d_sq : min_dsq;
+                    // Update the distance squared with the current value
+                    d_sq += std::pow(oct_refr - oct_comp, 2);
                 }
 
-                // Compute the kernel for the current comparison
-                const float kernel = std::exp(- min_dsq * inv_den);
+                // Normalise the distance squared
+                d_sq = d_sq / No;
 
-                // Update the map value with the weighted sum
-                denoised_M[er] += kernel * original_M[ec];
-                denoised_M[ec] += kernel * original_M[er];
+                // Update the minimum distance
+                min_dsq = (min_dsq > d_sq) ? d_sq : min_dsq;
+            }
 
-                // Update the sum of kernels for each
-                sum_kernels[er] += kernel;
-                sum_kernels[ec] += kernel;
+            // Compute the kernel for the current comparison
+            const float kernel = std::exp(- min_dsq * inv_den);
 
-                // The prefilter is passed both for the reference and comparison env
-                prefilter_passed[er] += 1;
-                prefilter_passed[ec] += 1;
+            // Update the map value with the weighted sum
+            denoised_M[er] += kernel * original_M[ec];
+            denoised_M[ec] += kernel * original_M[er];
 
-            } // -- End of prefilter
+            // Update the sum of kernels for each environment
+            sum_kernels[er] += kernel;
+            sum_kernels[ec] += kernel;
+
         } // -- End of comparison environment
 
         // Denoise the value by computing the weighted average
@@ -381,28 +358,12 @@ std::tuple<Map, float, vector<float>> Denoiser::nlmeans_denoiser(
 
     } // -- End of main loop
 
-    // Normalise the prefilter with the number of examples
-    for (int e = 0; e < Ne; e++) { prefilter_passed[e] /= Ne; }
-
-    // Calculate some statistics of the prefilter
-    std::vector<float> monitor(8);
-
-    monitor[0] = pref_tol;
-    monitor[1] = Stats::mean(prefilter_passed, Ne);
-    monitor[2] = Stats::std(prefilter_passed, Ne);
-    monitor[3] = Stats::median(prefilter_passed, Ne);
-    monitor[4] = Stats::max(prefilter_passed, Ne);
-    monitor[5] = Stats::min(prefilter_passed, Ne);
-    monitor[6] = Ne;
-    monitor[7] = avg_points_per_octanct(map, r_env);
-
     // Delete the heap allocated data
     delete[] envs;
     delete[] rots;
     delete[] sum_kernels;
-    delete[] prefilter_passed;
 
     // Return a tuple containing the denoised map and the denoised parameter
-    return std::make_tuple(denoised_map, hd, monitor);
+    return std::make_tuple(denoised_map, hd);
 }
 // -- }}}
