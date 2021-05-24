@@ -1,8 +1,5 @@
 # Ignore some folders containing data, output and logs
-data
 out
-log
-old
 
 # Ignore executable
 denoise_map
