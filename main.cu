@@ -3,21 +3,51 @@
 
 // User defined modules
 #include <Map.hpp>
+#include <Argparser.hpp>
 #include <path.hpp>
 #include <denoiser.hpp>
 #include <utils.hpp>
 #include <stats.hpp>
 
-int main(const int argc, const char** argv)
+int main(const int argc, char** argv)
 {
-    // Path to the protein
-    const char* protein_path = argv[1];
-    const char* map_name     = argv[2];
+    // Generate an argparser object to deal with command line input
+    const Argparser command_args(argc, argv);
 
-    // Added sigma noise to the map
-    const float sigma  = std::stof(argv[3]);
-    const float perc_t = std::stof(argv[4]);
-    const float r_env  = std::stof(argv[5]);
+    // Check if the argparser contains the --help flag
+    const bool is_help = command_args.check_flag("--help");
+
+    if (is_help) {
+        std::cout << 
+        "  ./denoise map --path [str] --name [str] --s [float] --p [float] --r [float]\n"
+        "  Arguments:\n"
+        "   --path: Path where the data is stored.   Example: ./data/rnase\n"
+        "   --name: Name of the map file to process. Example: ./refmac.map\n"
+        "   --s:    Standard deviation of the noise add. If zero, no noise added\n"
+        "   --p:    Percentage of the total spread of the map used to create the\n"
+        "           denoiser parameter.\n"
+        "   --r:    Radious of search used to create an environment.\n\n";
+        return 0;
+    }
+
+    // Check the existence of several flags in the system
+    const bool is_path  = command_args.check_flag("--path");
+    const bool is_name  = command_args.check_flag("--name");
+    const bool is_s     = command_args.check_flag("--s");
+    const bool is_p     = command_args.check_flag("--p");
+    const bool is_r     = command_args.check_flag("--r");
+
+    if (!is_path || !is_name || !is_s || !is_p || !is_r) {
+        std::cout << " ERROR: Command line arguments are incorrect\n";
+        return 1;
+    }
+
+    // Get the correct data from the argument parser
+    const std::string protein_path = command_args.get_flag("--path");
+    const std::string map_name     = command_args.get_flag("--name");
+    const float sigma              = command_args.get_flag<float>("--s");
+    const float perc_t             = command_args.get_flag<float>("--p");
+    const float r_env              = command_args.get_flag<float>("--r");
 
     // Obtain the name of the protein from the protein path
     const auto protein = Path::get_basename(protein_path);

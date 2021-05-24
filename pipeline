@@ -65,7 +65,7 @@ ${MAKE_MAP} ${PROT_PATH} ${MAP_FILE}
 
 # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
-HDEN=$(${BASE_PATH}/denoise_map ${PROT_PATH} ${MAP_FILE} ${SIGMA} ${HPERC} ${R_ENV})
+HDEN=$(${BASE_PATH}/denoise_map --path ${PROT_PATH} --name ${MAP_FILE} --s ${SIGMA} --p ${HPERC} --r ${R_ENV})
 
 # -- Restrict the denoiser parameter to 4 digits
 HDEN=$(printf %.4f ${HDEN})
