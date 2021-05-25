@@ -13,7 +13,7 @@ function copy_files()
 function print_help()
 {
     printf " -- pipeline script\n"
-    printf "    ./pipeline [protein] [sigma] [perc_h] [r_env] [pref_eps]\n\n"
+    printf "    ./pipeline [protein] [sigma] [perc_h] [r_env]\n\n"
     printf "  * Parameters:\n"
     printf "     * protein: Name of the protein. The program needs all proteins\n"
     printf "       to be processed located inside a data/ folder. The data folder\n"
@@ -24,8 +24,7 @@ function print_help()
     printf "       used to generate the denoising parameter.\n"
     printf "     * r_env: Radious that defines the environment volume. All points\n"
     printf "       whose distance is less or equal than r_env from a reference point\n"
-    printf "       will be considered in the environment calculation.\n"
-    printf "     * pref_eps: Prefilter size.\n\n"
+    printf "       will be considered in the environment calculation.\n\n"
     printf "  * Important:\n"
     printf "     - pipeline needs a environmental variable called \$CCP4_PATH\$\n"
     printf "    containing the path to the CCP4 software. For example, it can\n"
