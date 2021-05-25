@@ -24,8 +24,8 @@ Information about how to use the denoiser can be found by invoking
 ```
 
 ## Dependencies
-`denoise_map` does not use any dependencies. The only external dependency is `gemmi`,
-however, the library is include in the repository. 
+`denoise_map` does not use any external dependencies. The only external
+dependency is `gemmi`. However, the library is include in the repository. 
 
 ## Installing CUDA
 To install CUDA in a Linux environment, one could follow this
