@@ -20,7 +20,7 @@ NVC_OBJ := $(patsubst $(SRC_DIR)/%.cu, $(OBJ_DIR)/%.o, $(NVC_SRC))
 SRC_EXT = cpp cu
 
 # -- Define the CXXFLAGS
-CXXFLAGS = -std=c++17 -O3 --gpu-architecture=sm_52
+CXXFLAGS = -std=c++14 -O3 --gpu-architecture=sm_52
 CXX = nvcc
 
 .PHONY: all
