@@ -19,14 +19,18 @@ int main(const int argc, char** argv)
 
     if (is_help) {
         std::cout << 
-        "  ./denoise map --path [str] --name [str] --s [float] --p [float] --r [float]\n"
+        "  -- denoise_map\n"
+        "  Usage:\n"
+        "  denoise map --path [str] --name [str] --s [float] --p [float] --r [float]\n\n"
         "  Arguments:\n"
         "   --path: Path where the data is stored.   Example: ./data/rnase\n"
         "   --name: Name of the map file to process. Example: ./refmac.map\n"
         "   --s:    Standard deviation of the noise add. If zero, no noise added\n"
         "   --p:    Percentage of the total spread of the map used to create the\n"
         "           denoiser parameter.\n"
-        "   --r:    Radious of search used to create an environment.\n\n";
+        "   --r:    Radious of search used to create an environment.\n"
+        "  Example:\n"
+        "  denoise_map --path data/rnase --name refmac.map --s 0.0 --p 0.05 --r 2.0\n\n";
         return 0;
     }
 
