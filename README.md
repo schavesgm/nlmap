@@ -1,59 +1,81 @@
 # CCP4 map denoiser -- GPU accelerated application
 
-This repository contains a C++ implementation of a denoiser specifically implemented for
-CCP4 format maps. 
+This repository contains a C++ implementation of a denoiser specifically implemented
+for CCP4 format maps. The repository also contains a testing pipeline to monitor the
+performance of the denoiser.
 
-# Building the denoiser `denoise_map`
+# Non-local means denoiser
+The repository contains a non-local means denoiser implementation written in
+`C++/CUDA`.  The entry point of the code is `main.cu`. 
 
-The denoiser is written in `C++/CUDA`. Its entry point is `main.cu`. The header files
-used by the denoiser are contained inside `include`. The actual implementation is included
-inside `src`. The denoiser uses `gemmi` as a dependency, which can be found inside
-`external`.  Besides the standard library, no other dependencies are used.
+The denoiser uses a `Makefile` as the build system. The code can be compiled using
+`nvcc` with `c++14` as the minimum C++ standard tested. The older version of `nvcc`
+tested is 11.3, V11.3.109. One may need to change the flag `--gpu-architecture` when
+running in a new system with a different GPU.
 
-The denoiser uses a `Makefile` to compile. The code is compiled using `nvcc` with `c++17`
-as the minimum standard. The compilation has been tested with a version of `nvcc` 11.3, 
-V11.3.58. One can change the flags used by `nvcc` changing `CXXFLAGS`. Note that the flag
-`--gpu-architecture` might need to be varied depending on the GPU used. Building the
-denoiser is just a matter of using,
-
+The denoiser can be built by invoking
 ```bash
 make
 ```
 
-Information about the parameters used in the denoiser can be found by calling
-
+Information about how to use the denoiser can be found by invoking
 ```bash
 ./denoise_map --help
 ```
 
-# Testing the results
+## Dependencies
+`denoise_map` does not use any dependencies. The only external dependency is `gemmi`,
+however, the library is include in the repository. 
 
-In addition to a denoiser, the repository contains a shell script to test and monitor the
-performance of the denoiser. The shell script that implements this pipeline is `pipeline`.
-`pipeline` uses several [CCP4](https://www.ccp4.ac.uk/) applications, therefore, the CCP4
-software must be installed in the system. The basic installation of CCP4 is sufficient.
-One should be sure that the system in which `pipeline` is run contains the following
-applications: `cfft`, `cad`, `ccp4-python`, `cinvfft` and `sigmaa`.
+## Installing CUDA
+To install CUDA in a Linux environment, one could follow this
+[guide](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html). To
+install CUDA in an Arch linux flavour, one could use the following
+[resource](https://wiki.archlinux.org/title/GPGPU). Before running the denoiser, make
+sure that kernels could be invoked and that CUDA works as expected.
 
-After processing the maps, `pipeline` calls several `python` scripts contained inside
-`scripts/python`. These scripts post-process the log files output by `ccp4-python` to
-monitor the performance of the denoiser. These scripts create several files and images.
-The dependencies of these scripts are: `numpy`, `matplotlib`, `regex`, `json` and `gemmi`.
+# Testing/monitoring the denoiser
+In addition to the denoiser, this repository contains `pipeline`; a shell script to
+test and monitor the performance of the denoiser. The pipeline processes a given
+protein contained in folder called `data` and produces several builds of the same
+protein. The `data` folder must be located in the same directory where `pipeline` is
+invoked. The repository contains and example of the structure that data `data` should
+have. Each processing generates three different builds of the same protein: one for
+the denoised version of map, obtained after applying `denoise_map` to the original
+map; another one for the `noisy` version of the map, obtained after adding some noise
+to the original map; finally, two more maps are analysed. One for the original .mtz
+file and another one for the original .map extracted from the .mtz file.
 
-The results of the pipeline for a given protein are stored inside a folder named `out`.
-Inside `out`, one can find the resulting useful maps under the folder
-`out/data/{protein}/s*_h*_r*_p*`, where the last part specifies the parameters of the
-simulation. Inside `out/log/{protein}/s*_h*_r*_p*`, some important plots and log files are
-stored to monitor the performance of the denoiser.
+After processing the maps, `pipeline` calls several python scripts contained inside
+`scripts/python`. These scripts post-process the maps to obtain some metrics to
+monitor the performance of the denoiser.
 
-One can run the pipeline in any directory. However, inside the directory in which
-`pipeline` is run, there must be a folder called `data`. An example of the structure of 
-`data` is found in the repository.
+The results of the pipeline are stored inside a folder named `out`, created in the
+directory where `pipeline` was invoked. The results are stored in a directory tree,
+grouping all runs for a given protein under the same folder.
 
-In order to know how to run `pipeline`, we can invoke its help by doing
-
+Information about the input parameters used in `pipeline` and an example can be found
+by using,
 ```bash
 ./pipeline help
 ```
 
 The help message contains all the needed information of the needed parameters.
+
+## Dependencies
+`pipeline` uses the following dependencies:
+
+ - Python modules:
+    - numpy
+    - matplotlib
+    - json
+    - regex
+    - gemmi
+ - [CCP4 software](https://www.ccp4.ac.uk/)
+    - cfft
+    - cad
+    - ccp4-python
+    - cinvfft
+    - sigma
+ - Utilities:
+    - convert (ImageMagick)
