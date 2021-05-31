@@ -289,7 +289,7 @@ std::tuple<Map, float> Denoiser::nlmeans_denoiser(
     const auto max = std::max_element(env_stats.begin(), env_stats.end());
 
     // Calculate the denoising parameter using the threshold provided
-    const float hd  = 0.5 * p_thresh * (*max - *min);
+    const float hd      = 0.5 * p_thresh * (*max - *min);
     const float inv_den = 1 / (2 * hd * hd);
 
     // Generate the device copies of the relevant objects

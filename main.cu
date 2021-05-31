@@ -21,7 +21,7 @@ int main(const int argc, char** argv)
         std::cout << 
         "  -- denoise_map\n"
         "  Usage:\n"
-        "  denoise map --path [str] --name [str] --s [float] --p [float] --r [float]\n\n"
+        "  denoise map --path [str] --name [str] --s [float] --p [float] --r [float] --d [int] (optional)\n\n"
         "  Arguments:\n"
         "   --path: Path where the data is stored.   Example: ./data/rnase\n"
         "   --name: Name of the map file to process. Example: ./refmac.map\n"
@@ -29,8 +29,9 @@ int main(const int argc, char** argv)
         "   --p:    Percentage of the total spread of the map used to create the\n"
         "           denoiser parameter.\n"
         "   --r:    Radious of search used to create an environment.\n"
+        "   --d:    Device number (GPU) where the code will be located. Default 0.\n"
         "  Example:\n"
-        "  denoise_map --path data/rnase --name refmac.map --s 0.0 --p 0.05 --r 2.0\n\n";
+        "  denoise_map --path data/rnase --name refmac.map --s 0.0 --p 0.05 --r 2.0 --d 0\n\n";
         return 0;
     }
 
@@ -40,11 +41,15 @@ int main(const int argc, char** argv)
     const bool is_s     = command_args.check_flag("--s");
     const bool is_p     = command_args.check_flag("--p");
     const bool is_r     = command_args.check_flag("--r");
+    const bool is_d     = command_args.check_flag("--d");
 
     if (!is_path || !is_name || !is_s || !is_p || !is_r) {
         std::cout << " ERROR: Command line arguments are incorrect\n";
         return 1;
     }
+
+    // Set the correct cuda device for the calculation
+    const int device = is_d ? command_args.get_flag<int>("--d") : 0;
 
     // Get the correct data from the argument parser
     const std::string protein_path = command_args.get_flag("--path");
@@ -52,6 +57,9 @@ int main(const int argc, char** argv)
     const float sigma              = command_args.get_flag<float>("--s");
     const float perc_t             = command_args.get_flag<float>("--p");
     const float r_env              = command_args.get_flag<float>("--r");
+
+    // Set the device GPU where the code will be launched
+    cudaSetDevice(device);
 
     // Obtain the name of the protein from the protein path
     const auto protein = Path::get_basename(protein_path);
