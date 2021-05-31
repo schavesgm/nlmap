@@ -29,6 +29,9 @@ SIGMA=$(printf %.4f ${2});  assert_var_exists "noise_std" ${2}
 HPERC=$(printf %.4f ${3});  assert_var_exists "h_perc"    ${3}
 R_ENV=$(printf %.4f ${4});  assert_var_exists "r_env"     ${4}
 
+# -- Get the GPU index used to process the data
+GPUID=$(printf %d   ${5})
+
 # -- Directories to the scripts
 MAKE_MAP=${BASE_PATH}/scripts/shell/make_map.sh
 BUILD_MTZ=${BASE_PATH}/scripts/shell/build_from_mtz.sh
@@ -54,6 +57,7 @@ header_message "Protein selected: ${PROTEIN}"
 header_message "Standard deviation of added noise: ${SIGMA}"
 header_message "Proportion used in denoising parameter: ${HPERC}"
 header_message "Radious used in environments: ${R_ENV} (A)"
+header_message "GPU device used in the calculation: GPU:${GPUID}"
 
 # -- Generate a variable containing the specific map file for this run
 MAP_FILE=refmac_${RANDOM}_${HPERC}.map
@@ -65,7 +69,7 @@ ${MAKE_MAP} ${PROT_PATH} ${MAP_FILE}
 
 # -- Generate the noisy and denoised versions of the map
 header_message "Processing the maps using ./denoise_map"
-HDEN=$(${BASE_PATH}/denoise_map --path ${PROT_PATH} --name ${MAP_FILE} --s ${SIGMA} --p ${HPERC} --r ${R_ENV})
+HDEN=$(${BASE_PATH}/denoise_map --path ${PROT_PATH} --name ${MAP_FILE} --s ${SIGMA} --p ${HPERC} --r ${R_ENV} --d ${GPUID})
 
 # -- Restrict the denoiser parameter to 4 digits
 HDEN=$(printf %.4f ${HDEN})
