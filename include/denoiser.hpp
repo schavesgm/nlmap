@@ -46,5 +46,6 @@ namespace Denoiser
 
     // -- Construct a table containing the average of each environment {{{
     vector<float> table_of_stats(Map&, const float&);
+    vector<float> table_of_stats(Map&, const float*, const float&);
     // -- }}}
 };
