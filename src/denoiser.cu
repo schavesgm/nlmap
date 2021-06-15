@@ -199,7 +199,7 @@ float* Denoiser::table_of_envs(Map& map, const float& r_env)
 }
 // -- }}}
 
-// -- Table containing environment statistics {{{
+// -- Table containing environment averages {{{
 __host__
 vector<float> Denoiser::table_of_stats(Map& map, const float& r_env)
 {
@@ -256,6 +256,47 @@ vector<float> Denoiser::table_of_stats(Map& map, const float& r_env)
     // Return the table of environments
     return env_stats;
 }
+
+__host__
+vector<float> Denoiser::table_of_stats(Map& map, const float* envs, const float& r_env)
+{
+    // First, obtain a table of near indices
+    const auto indices = table_of_indices(map, r_env);
+
+    // Number of rows and columns in the array
+    const int Ne = map.get_volume();
+
+    // Allocate memory for all octancts in the grid
+    vector<float> env_stats(Ne);
+
+    // Count the corresponding environment for each point
+    int eidx = 0;
+
+    // iterate for each point in the grid to obtain its environment
+    for (int w = 0; w < map.Nw; w++) {
+        for (int v = 0; v < map.Nv; v++) {
+            for (int u = 0; u < map.Nu; u++) {
+
+                // Temporary that will contain the avg of the environment
+                float env_avg = 0.0f;
+
+                // Add each octanct to the environment average
+                for (int o = 0; o < Octanct::No; o++) {
+                    env_avg += envs[eidx * Octanct::No + o];
+                }
+
+                // Calculate the average of the environment
+                env_stats[eidx] = env_avg / indices.size();
+
+                // Move to the next environment in the grid
+                eidx++;
+            }
+        }
+    }
+
+    // Return the table of environments
+    return env_stats;
+}
 // -- }}}
 
 // -- Main algorithm to denoise a map using non-local means {{{
@@ -281,12 +322,12 @@ std::tuple<Map, float> Denoiser::nlmeans_denoiser(
     // Table containing the rotated indices for each needed rotation
     const octanct* rots = Octanct::table_of_rotations();
 
-    // Get all average environments of the map -- std::vector
-    const auto env_stats = table_of_stats(map, r_env);
+    // Get all average environments of the map using envs -- std::vector
+    const auto env_avg   = table_of_stats(map, envs, r_env);
 
     // Get the maximum and minimum environment average
-    const auto min = std::min_element(env_stats.begin(), env_stats.end());
-    const auto max = std::max_element(env_stats.begin(), env_stats.end());
+    const auto min = std::min_element(env_avg.begin(), env_avg.end());
+    const auto max = std::max_element(env_avg.begin(), env_avg.end());
 
     // Calculate the denoising parameter using the threshold provided
     const float hd      = 0.5 * p_thresh * (*max - *min);
