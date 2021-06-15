@@ -1,5 +1,6 @@
 # Ignore some folders containing data, output and logs
 out
+data/4gos
 
 # Ignore executable
 denoise_map
