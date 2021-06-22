@@ -35,6 +35,14 @@ LABIN FP=F SIGFP=SIGF FC=FC PHIC=PHIC
 END
 eof
 
+# -- Get some information to populate E3
+mtzdump HKLIN dataset.mtz > mtzdump.log << eof
+END
+eof
+
+# -- Get some information from the newly created dumplog
+FREE_FLAG=$(grep -Poi 'SIGF \K[\w_]+' mtzdump.log)
+
 # -- Start buccaneer to process the data
 ccp4-python -u ${CCP4_PATH}/bin/buccaneer_pipeline -stdin > ${BUC_LOG} <<eof
 title ${MAP_NAME} build
@@ -45,7 +53,7 @@ colin-ref-hl [/*/*/FC.ABCD.A,/*/*/FC.ABCD.B,/*/*/FC.ABCD.C,/*/*/FC.ABCD.D]
 seqin sequence.seq
 mtzin buccaneer-input.mtz
 colin-fo [/*/*/F,/*/*/SIGF]
-colin-free [/*/*/FreeR_flag]
+colin-free [/*/*/${FREE_FLAG}]
 colin-phifom [/*/*/PHIC,/*/*/WCMB]
 pdbout buccaneer.pdb
 cycles 10

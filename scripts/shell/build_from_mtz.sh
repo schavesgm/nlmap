@@ -32,9 +32,17 @@ BUC_LOG=${LOG_PATH}/buccaneer.log
 # -- Move to directory and save new directory
 cd ${FILES_PATH}; END_PATH=$(pwd)
 
+# -- Get some information to populate E3
+mtzdump HKLIN dataset.mtz > mtzdump.log << eof
+END
+eof
+
+# -- Get some information from the newly created dumplog
+FREE_FLAG=$(grep -Poi 'SIGF \K[\w_]+' mtzdump.log)
+
 # -- Generate the output for buccaneer
 cad HKLIN1 dataset.mtz HKLIN2 refmac.mtz HKLOUT buccaneer-input.mtz > ${CAD_LOG} <<eof
-LABIN  FILE 1 E1=F E2=SIGF E3=FreeR_flag
+LABIN  FILE 1 E1=F E2=SIGF E3=${FREE_FLAG}
 LABIN  FILE 2 E1=PHIC_ALL_LS E2=FOM
 eof
 
@@ -48,7 +56,7 @@ colin-ref-hl [/*/*/FC.ABCD.A,/*/*/FC.ABCD.B,/*/*/FC.ABCD.C,/*/*/FC.ABCD.D]
 seqin sequence.seq
 mtzin buccaneer-input.mtz
 colin-fo [/*/*/F,/*/*/SIGF]
-colin-free [/*/*/FreeR_flag]
+colin-free [/*/*/${FREE_FLAG}]
 colin-phifom [/*/*/PHIC_ALL_LS,/*/*/FOM]
 pdbout buccaneer.pdb
 cycles 10
