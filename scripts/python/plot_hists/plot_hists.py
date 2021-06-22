@@ -42,9 +42,8 @@ if __name__ == '__main__':
     
     # Add the simulation name as supertitle
     fig.suptitle(
-        's = {}, h = {}, p = {},  r = {} (A)'.format(
-            matches.group(1), matches.group(2),
-            matches.group(3), matches.group(4),
+        's = {}, h = {}, p = {}, r = {} (A)'.format(
+            matches.group(1), matches.group(2), matches.group(4), matches.group(3)
         ), y = 0.95
     )
 
